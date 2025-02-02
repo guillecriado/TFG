@@ -74,10 +74,10 @@ class NeuronalNetworkX:
         print("Sucesores del nodo " + str(layer_list[0]) + ": " + str(next_layer_list))
         i=1
         while i<size and fullyConnected==True:
-            print("I: " + str(i) + " Size: " + str(self.numInputNeuron))
+            print("I: " + str(i) + " Size: " + str(size))
             x=layer_list[i]
             aux_list=list(nxg_aux.successors(x))
-            print("Sucesores del nodo " + str(i) + ": " + str(aux_list))
+            print("Sucesores del nodo " + str(x) + ": " + str(aux_list))
             if set(next_layer_list)==set(aux_list):
                 i+=1
             else:
@@ -142,3 +142,4 @@ class NeuronalNetworkX:
             #for j in range(self.numOutputNeuron):
             self.add_edge(i,1)
 
+    #
