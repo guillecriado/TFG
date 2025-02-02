@@ -141,5 +141,3 @@ class NeuronalNetworkX:
                 self.add_edge(j,i)
             #for j in range(self.numOutputNeuron):
             self.add_edge(i,1)
-
-    #

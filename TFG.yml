@@ -1,0 +1,53 @@
+name: TFG
+channels:
+  - defaults
+dependencies:
+  - bzip2=1.0.8=h2bbff1b_6
+  - ca-certificates=2024.12.31=haa95532_0
+  - expat=2.6.4=h8ddb27b_0
+  - libffi=3.4.4=hd77b12b_1
+  - openssl=3.0.15=h827c3e9_0
+  - pip=25.0=py312haa95532_0
+  - python=3.12.8=h14ffc60_0
+  - setuptools=75.8.0=py312haa95532_0
+  - sqlite=3.45.3=h2bbff1b_0
+  - tk=8.6.14=h0416ee5_0
+  - tzdata=2025a=h04d1e81_0
+  - vc=14.40=haa95532_2
+  - vs2015_runtime=14.42.34433=h9531ae6_2
+  - wheel=0.45.1=py312haa95532_0
+  - xz=5.4.6=h8cc25b3_1
+  - zlib=1.2.13=h8cc25b3_1
+  - pip:
+      - absl-py==2.1.0
+      - asttokens==3.0.0
+      - colorama==0.4.6
+      - decorator==5.1.1
+      - executing==2.2.0
+      - h5py==3.12.1
+      - ipython==8.31.0
+      - jedi==0.19.2
+      - jinja2==3.1.5
+      - jsonpickle==4.0.1
+      - keras==3.8.0
+      - markdown-it-py==3.0.0
+      - markupsafe==3.0.2
+      - matplotlib-inline==0.1.7
+      - mdurl==0.1.2
+      - ml-dtypes==0.5.1
+      - namex==0.0.8
+      - networkx==3.4.2
+      - numpy==2.2.2
+      - optree==0.14.0
+      - packaging==24.2
+      - parso==0.8.4
+      - prompt-toolkit==3.0.50
+      - pure-eval==0.2.3
+      - pygments==2.19.1
+      - pyvis==0.3.2
+      - rich==13.9.4
+      - stack-data==0.6.3
+      - traitlets==5.14.3
+      - typing-extensions==4.12.2
+      - wcwidth==0.2.13
+prefix: C:\Users\gcria\miniconda3\envs\TFG
