@@ -92,11 +92,11 @@ class NeuronalNetworkX:
             else:
                 return fullyConnected
 
-    def isFullyConnectedBottomUp(self): #TODO: Revisar método
+    def isFullyConnectedBottomUp(self):
         nxg_aux = self.nxg.copy()
         fullyConnected = True
         index = self.numInputNeuron+1
-        layer_list = list(nxg_aux.predecessors(0))
+        layer_list = list(nxg_aux.predecessors(self.numInputNeuron))
         size_next_layer = len(layer_list)
         while index < self.numOutputNeuron and fullyConnected == True:
             aux_list = list(nxg_aux.predecessors(index))
@@ -141,8 +141,8 @@ class NeuronalNetworkX:
             self.add_node(1)
             for j in range(self.numInputNeuron):
                 self.add_edge(j,i)
-            for j in range(self.numOutputNeuron):
-                self.add_edge(i,1)
+            for k in range(self.numOutputNeuron):
+                self.add_edge(i,k)
 
     def parseKeras(self): # TODO: Mejorar método para poder meter gráficos complejos.
         nxg_aux = self.nxg.copy()
