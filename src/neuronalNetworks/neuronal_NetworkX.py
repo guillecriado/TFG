@@ -1,6 +1,7 @@
-from operator import index
-
 import networkx as nx
+from keras.src.models import Sequential
+from keras.src.layers import Dense
+
 
 class NeuronalNetworkX:
     def __init__(self, numImputs, numOutputs):
@@ -8,6 +9,7 @@ class NeuronalNetworkX:
         self.numInputNeuron=numImputs
         self.numOutputNeuron=numOutputs
         self.nodeID: int =0
+        self.model=Sequential()
 
     def add_node(self, quantity):
         node_id=self.nodeID
@@ -141,3 +143,21 @@ class NeuronalNetworkX:
                 self.add_edge(j,i)
             #for j in range(self.numOutputNeuron):
             self.add_edge(i,1)
+
+    def parseKeras(self):
+        nxg_aux = self.nxg.copy()
+        hidden_layer=list(nxg_aux.successors(0))
+        self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
+        self.__explore_hidden_layers(hidden_layer,nxg_aux)
+
+
+    def __explore_hidden_layers(self, layer, nxg_aux):
+        size_actual_later=len(layer)
+        next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
+        size_next_layer=len(next_layer)
+        if size_next_layer >0 : # There is more than 1 hidden layer
+            self.model.add(Dense(size_actual_later,activation='relu'))
+            self.__explore_hidden_layers(next_layer, nxg_aux)
+        else: # Is going to be the output layer
+            self.model.add(Dense(size_actual_later,activation='sigmoid'))
+
