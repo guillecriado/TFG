@@ -92,7 +92,7 @@ class NeuronalNetworkX:
             else:
                 return fullyConnected
 
-    def isFullyConnectedBottomUp(self):
+    def isFullyConnectedBottomUp(self): #TODO: Revisar método
         nxg_aux = self.nxg.copy()
         fullyConnected = True
         index = self.numInputNeuron+1
@@ -134,17 +134,17 @@ class NeuronalNetworkX:
     def defaultNetwork(self):
         for i in range(self.numInputNeuron): # Capa de entrada
             self.add_node(1)
-        for i in range(self.numOutputNeuron): # Salida Pendiente de desarrollar para clusterización
+        for i in range(self.numOutputNeuron): # TODO:  Salida Pendiente de desarrollar para clusterización
             self.add_node(1)
 
         for i in range(2,6):  # Capa oculta
             self.add_node(1)
             for j in range(self.numInputNeuron):
                 self.add_edge(j,i)
-            #for j in range(self.numOutputNeuron):
-            self.add_edge(i,1)
+            for j in range(self.numOutputNeuron):
+                self.add_edge(i,1)
 
-    def parseKeras(self):
+    def parseKeras(self): # TODO: Mejorar método para poder meter gráficos complejos.
         nxg_aux = self.nxg.copy()
         hidden_layer=list(nxg_aux.successors(0))
         self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
