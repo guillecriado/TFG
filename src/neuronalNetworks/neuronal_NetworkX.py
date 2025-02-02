@@ -16,7 +16,7 @@ class NeuronalNetworkX:
         self.nodeID+=1 # Incrementamos el ID para el siguiente nodo
         label=str("ID:"+str(node_id)+"Neurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
         color=self.color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
-        self.nxg.add_node(node_id,label=label,color=color)
+        self.nxg.add_node(node_id,label=label,color=color, neurons=quantity)
 
     def add_edge(self,source,target):
         self.nxg.add_edge(source,target)
@@ -144,7 +144,7 @@ class NeuronalNetworkX:
             for k in range(self.numOutputNeuron):
                 self.add_edge(i,k)
 
-    def parseKeras(self): # TODO: Mejorar método para poder meter gráficos complejos.
+    def parseKeras(self):
         nxg_aux = self.nxg.copy()
         hidden_layer=list(nxg_aux.successors(0))
         self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
@@ -152,7 +152,7 @@ class NeuronalNetworkX:
 
 
     def __explore_hidden_layers(self, layer, nxg_aux):
-        size_actual_later=len(layer)
+        size_actual_later=self.__get_neurons_of_layer(layer, nxg_aux)
         next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
         size_next_layer=len(next_layer)
         if size_next_layer >0 : # There is more than 1 hidden layer
@@ -160,4 +160,9 @@ class NeuronalNetworkX:
             self.__explore_hidden_layers(next_layer, nxg_aux)
         else: # Is going to be the output layer
             self.model.add(Dense(size_actual_later,activation='sigmoid'))
+
+
+    def __get_neurons_of_layer(self, layer, nxg_aux):
+        quantity_list=nxg_aux.nodes(data='quantity')
+        return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
 
