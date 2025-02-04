@@ -7,7 +7,9 @@ class NeuronalNetworkX:
     def __init__(self, numImputs, numOutputs):
         self.nxg = nx.DiGraph()
         self.numInputNeuron=numImputs
+        self.inputNeurons=list()
         self.numOutputNeuron=numOutputs
+        self.outputNeurons= list()
         self.nodeID: int =0
         self.model=Sequential()
 
@@ -15,7 +17,7 @@ class NeuronalNetworkX:
         node_id=self.nodeID
         self.nodeID+=1 # Incrementamos el ID para el siguiente nodo
         label=str("ID:"+str(node_id)+"Neurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
-        color=self.color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
+        color=self.__color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
         self.nxg.add_node(node_id,label=label,color=color, neurons=quantity)
 
     def add_edge(self,source,target):
@@ -36,7 +38,7 @@ class NeuronalNetworkX:
             return False
 
 
-    def color_assignment(self, quantity):
+    def __color_assignment(self, quantity):
         color='black'
         if quantity == '':
             color = 'blue'
@@ -66,11 +68,11 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(layer_list) > 0:
-                return self.isFullyConnectedTopDownAux(nxg_aux, size_next_layer,  layer_list)
+                return self.__isFullyConnectedTopDownAux(nxg_aux, size_next_layer,  layer_list)
             else:
                 return fullyConnected
 
-    def isFullyConnectedTopDownAux(self,nxg_aux,size,layer_list):
+    def __isFullyConnectedTopDownAux(self,nxg_aux,size,layer_list):
         fullyConnected=True
         next_layer_list=list(nxg_aux.successors(layer_list[0]))
         print("Sucesores del nodo " + str(layer_list[0]) + ": " + str(next_layer_list))
@@ -88,7 +90,7 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(next_layer_list)>0:
-                return self.isFullyConnectedTopDownAux(nxg_aux, len(next_layer_list), next_layer_list)
+                return self.__isFullyConnectedTopDownAux(nxg_aux, len(next_layer_list), next_layer_list)
             else:
                 return fullyConnected
 
@@ -108,11 +110,11 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(layer_list) > 0:
-                return self.isFullyConnectedBottomUpAux(nxg_aux, size_next_layer, layer_list)
+                return self.__isFullyConnectedBottomUpAux(nxg_aux, size_next_layer, layer_list)
             else:
                 return fullyConnected
 
-    def isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
+    def __isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
         fullyConnected = True
         next_layer_list = list(nxg_aux.predecessors(index=layer_list[0]))
         i = 1
@@ -127,22 +129,35 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(next_layer_list) > 0:
-                return self.isFullyConnectedBottomUpAux(nxg_aux, len(next_layer_list), next_layer_list)
+                return self.__isFullyConnectedBottomUpAux(nxg_aux, len(next_layer_list), next_layer_list)
             else:
                 return fullyConnected
 
     def defaultNetwork(self):
         for i in range(self.numInputNeuron): # Capa de entrada
+            self.inputNeurons.append(self.nodeID)
             self.add_node(1)
-        for i in range(self.numOutputNeuron): # TODO:  Salida Pendiente de desarrollar para clusterización
+        for j in range(self.numOutputNeuron): # Capa de salida
+            self.inputNeurons.append(self.nodeID)
             self.add_node(1)
 
-        for i in range(2,6):  # Capa oculta
+        first_hidden_neuron=self.nodeID
+        last_hidden_neuron=first_hidden_neuron+6
+
+        for k in range(first_hidden_neuron,last_hidden_neuron):  # Capa oculta
             self.add_node(1)
-            for j in range(self.numInputNeuron):
-                self.add_edge(j,i)
-            for k in range(self.numOutputNeuron):
-                self.add_edge(i,k)
+            for l in self.inputNeurons:
+                self.add_edge(l,k)
+            for m in self.outputNeurons:
+                self.add_edge(k,m)
+
+    def simpleNetwork(self):
+        for i in range(self.numInputNeuron): # Capa de entrada
+            self.inputNeurons.append(self.nodeID)
+            self.add_node(1)
+        for j in range(self.numOutputNeuron): # Capa de salida
+            self.inputNeurons.append(self.nodeID)
+            self.add_node(1)
 
     def parseKeras(self):
         nxg_aux = self.nxg.copy()
