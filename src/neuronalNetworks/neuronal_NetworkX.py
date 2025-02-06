@@ -7,7 +7,9 @@ class NeuronalNetworkX:
     def __init__(self, numImputs, numOutputs):
         self.nxg = nx.DiGraph()
         self.numInputNeuron=numImputs
+        self.inputNeurons=list()
         self.numOutputNeuron=numOutputs
+        self.outputNeurons= list()
         self.nodeID: int =0
         self.model=Sequential()
 
@@ -15,8 +17,8 @@ class NeuronalNetworkX:
         node_id=self.nodeID
         self.nodeID+=1 # Incrementamos el ID para el siguiente nodo
         label=str("ID:"+str(node_id)+"Neurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
-        color=self.color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
-        self.nxg.add_node(node_id,label=label,color=color)
+        color=self.__color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
+        self.nxg.add_node(node_id,label=label,color=color, neurons=quantity)
 
     def add_edge(self,source,target):
         self.nxg.add_edge(source,target)
@@ -36,7 +38,7 @@ class NeuronalNetworkX:
             return False
 
 
-    def color_assignment(self, quantity):
+    def __color_assignment(self, quantity):
         color='black'
         if quantity == '':
             color = 'blue'
@@ -66,11 +68,11 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(layer_list) > 0:
-                return self.isFullyConnectedTopDownAux(nxg_aux, size_next_layer,  layer_list)
+                return self.__isFullyConnectedTopDownAux(nxg_aux, size_next_layer,  layer_list)
             else:
                 return fullyConnected
 
-    def isFullyConnectedTopDownAux(self,nxg_aux,size,layer_list):
+    def __isFullyConnectedTopDownAux(self,nxg_aux,size,layer_list):
         fullyConnected=True
         next_layer_list=list(nxg_aux.successors(layer_list[0]))
         print("Sucesores del nodo " + str(layer_list[0]) + ": " + str(next_layer_list))
@@ -88,15 +90,15 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(next_layer_list)>0:
-                return self.isFullyConnectedTopDownAux(nxg_aux, len(next_layer_list), next_layer_list)
+                return self.__isFullyConnectedTopDownAux(nxg_aux, len(next_layer_list), next_layer_list)
             else:
                 return fullyConnected
 
-    def isFullyConnectedBottomUp(self): #TODO: Revisar método
+    def isFullyConnectedBottomUp(self):
         nxg_aux = self.nxg.copy()
         fullyConnected = True
         index = self.numInputNeuron+1
-        layer_list = list(nxg_aux.predecessors(0))
+        layer_list = list(nxg_aux.predecessors(self.numInputNeuron))
         size_next_layer = len(layer_list)
         while index < self.numOutputNeuron and fullyConnected == True:
             aux_list = list(nxg_aux.predecessors(index))
@@ -108,11 +110,11 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(layer_list) > 0:
-                return self.isFullyConnectedBottomUpAux(nxg_aux, size_next_layer, layer_list)
+                return self.__isFullyConnectedBottomUpAux(nxg_aux, size_next_layer, layer_list)
             else:
                 return fullyConnected
 
-    def isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
+    def __isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
         fullyConnected = True
         next_layer_list = list(nxg_aux.predecessors(index=layer_list[0]))
         i = 1
@@ -127,24 +129,37 @@ class NeuronalNetworkX:
             return fullyConnected
         else:
             if len(next_layer_list) > 0:
-                return self.isFullyConnectedBottomUpAux(nxg_aux, len(next_layer_list), next_layer_list)
+                return self.__isFullyConnectedBottomUpAux(nxg_aux, len(next_layer_list), next_layer_list)
             else:
                 return fullyConnected
 
     def defaultNetwork(self):
         for i in range(self.numInputNeuron): # Capa de entrada
+            self.inputNeurons.append(self.nodeID)
             self.add_node(1)
-        for i in range(self.numOutputNeuron): # TODO:  Salida Pendiente de desarrollar para clusterización
+        for j in range(self.numOutputNeuron): # Capa de salida
+            self.inputNeurons.append(self.nodeID)
             self.add_node(1)
 
-        for i in range(2,6):  # Capa oculta
-            self.add_node(1)
-            for j in range(self.numInputNeuron):
-                self.add_edge(j,i)
-            for j in range(self.numOutputNeuron):
-                self.add_edge(i,1)
+        first_hidden_neuron=self.nodeID
+        last_hidden_neuron=first_hidden_neuron+6
 
-    def parseKeras(self): # TODO: Mejorar método para poder meter gráficos complejos.
+        for k in range(first_hidden_neuron,last_hidden_neuron):  # Capa oculta
+            self.add_node(1)
+            for l in self.inputNeurons:
+                self.add_edge(l,k)
+            for m in self.outputNeurons:
+                self.add_edge(k,m)
+
+    def simpleNetwork(self):
+        for i in range(self.numInputNeuron): # Capa de entrada
+            self.inputNeurons.append(self.nodeID)
+            self.add_node(1)
+        for j in range(self.numOutputNeuron): # Capa de salida
+            self.inputNeurons.append(self.nodeID)
+            self.add_node(1)
+
+    def parseKeras(self):
         nxg_aux = self.nxg.copy()
         hidden_layer=list(nxg_aux.successors(0))
         self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
@@ -152,7 +167,7 @@ class NeuronalNetworkX:
 
 
     def __explore_hidden_layers(self, layer, nxg_aux):
-        size_actual_later=len(layer)
+        size_actual_later=self.__get_neurons_of_layer(layer, nxg_aux)
         next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
         size_next_layer=len(next_layer)
         if size_next_layer >0 : # There is more than 1 hidden layer
@@ -160,4 +175,9 @@ class NeuronalNetworkX:
             self.__explore_hidden_layers(next_layer, nxg_aux)
         else: # Is going to be the output layer
             self.model.add(Dense(size_actual_later,activation='sigmoid'))
+
+
+    def __get_neurons_of_layer(self, layer, nxg_aux):
+        quantity_list=nxg_aux.nodes(data='quantity')
+        return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
 
