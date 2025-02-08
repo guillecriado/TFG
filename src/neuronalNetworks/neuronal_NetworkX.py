@@ -138,7 +138,7 @@ class NeuronalNetworkX:
             self.inputNeurons.append(self.nodeID)
             self.add_node(1)
         for j in range(self.numOutputNeuron): # Capa de salida
-            self.inputNeurons.append(self.nodeID)
+            self.outputNeurons.append(self.nodeID)
             self.add_node(1)
 
         first_hidden_neuron=self.nodeID
@@ -156,7 +156,7 @@ class NeuronalNetworkX:
             self.inputNeurons.append(self.nodeID)
             self.add_node(1)
         for j in range(self.numOutputNeuron): # Capa de salida
-            self.inputNeurons.append(self.nodeID)
+            self.outputNeurons.append(self.nodeID)
             self.add_node(1)
 
     def parseKeras(self):
