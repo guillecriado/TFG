@@ -19,18 +19,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Conda environment
-      run:
-         sudo apt-get update && sudo apt-get install -y conda
-          conda env create -f TFG.yml
-          conda activate TFG
+    - name: Set up Miniconda environment
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        environment-file: TFG.yml
+        activate-environment: TFG
+        auto-activate-base: false
     - name: Lint with flake8
-      run:
-              # stop the build if there are Python syntax errors or undefined names
-              flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-              # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-              flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      run: |
+        conda run -n TFG flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        conda run -n TFG flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
-      run:
-              conda activate TFG
-              python -m unittest discover -s src/test
+      run: |
+        conda run -n TFG python -m unittest discover -s src/test
