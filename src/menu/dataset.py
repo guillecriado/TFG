@@ -25,8 +25,9 @@ class dataset:
     def divide_dataset(self, train_size, random_state):
         """
         Este método nos servirá para poder dividir el dataset en los conjuntos de entrenamiento y test.
-        :param train_size:
+        :param train_size:El porcentaje del dataset que va para entrenamiento
         :param random_state:
         :return:
         """
-
+        df_train, df_test = train_test_split(self.df, train_size=train_size, random_state=random_state)
+        return df_train, df_test
