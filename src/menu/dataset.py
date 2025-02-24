@@ -7,6 +7,8 @@ class dataset:
         self.path = file_name # TODO: Poner link completo cuando esté el cargador del dataset
         self.df = pd.read_csv(self.path)
         self.df_inputs = self.df
+        self.train_size=0.8
+        self.random_state=42
 
     def __show_columns(self):
         print("Columnas disponibles en el dataset:")
@@ -22,12 +24,20 @@ class dataset:
         self.df_inputs = self.df[indices_seleccionados]
         return num_inputs
 
-    def divide_dataset(self, train_size, random_state):
+    def __divide_dataset(self):
         """
         Este método nos servirá para poder dividir el dataset en los conjuntos de entrenamiento y test.
         :param train_size:El porcentaje del dataset que va para entrenamiento
         :param random_state:
         :return:
         """
-        df_train, df_test = train_test_split(self.df, train_size=train_size, random_state=random_state)
+        df_train, df_test = train_test_split(self.df, train_size=self.train_size, random_state=self.random_state)
         return df_train, df_test
+
+    def divide_input_output(self):
+        df_train, df_test = self.__divide_dataset()
+        df_train_input=df_train[df_train[self.df_inputs]]
+        df_test_input=df_test[df_test[self.df_inputs]]
+        # TODO: Averiguar cómo sacar el target.
+        return df_train_input, df_test_input
+
