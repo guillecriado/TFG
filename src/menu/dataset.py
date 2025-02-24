@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 class dataset:
 
@@ -20,3 +21,12 @@ class dataset:
         print(str(num_inputs))
         self.df_inputs = self.df[indices_seleccionados]
         return num_inputs
+
+    def divide_dataset(self, train_size, random_state):
+        """
+        Este método nos servirá para poder dividir el dataset en los conjuntos de entrenamiento y test.
+        :param train_size:
+        :param random_state:
+        :return:
+        """
+

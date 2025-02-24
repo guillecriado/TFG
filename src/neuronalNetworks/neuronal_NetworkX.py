@@ -1,3 +1,4 @@
+import keras
 import networkx as nx
 from keras.src.models import Sequential
 from keras.src.layers import Dense
@@ -12,6 +13,7 @@ class NeuronalNetworkX:
         self.outputNeurons= list()
         self.nodeID: int =0
         self.model=Sequential()
+        self.keras_path="my_model.keras"
 
     def add_node(self, quantity):
         node_id=self.nodeID
@@ -116,7 +118,7 @@ class NeuronalNetworkX:
 
     def __isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
         fullyConnected = True
-        next_layer_list = list(nxg_aux.predecessors(index=layer_list[0]))
+        next_layer_list = list(nxg_aux.predecessors(layer_list[0]))
         i = 1
         while i < size and fullyConnected == True:
             x = layer_list[i]
@@ -166,6 +168,7 @@ class NeuronalNetworkX:
         self.__explore_hidden_layers(hidden_layer,nxg_aux)
 
 
+
     def __explore_hidden_layers(self, layer, nxg_aux):
         size_actual_later=self.__get_neurons_of_layer(layer, nxg_aux)
         next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
@@ -181,3 +184,34 @@ class NeuronalNetworkX:
         quantity_list=nxg_aux.nodes(data='quantity')
         return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
 
+    def save_model(self):
+        self.model.save(self.keras_path)
+
+    def train_model(self, train_input, train_target, num_epochs):
+        """
+        Esta función será para entrenar la red neuronal.
+        :param train_input: Es la parte del DataFrame que nos sirve de entrada para entrenar.
+        :param train_target: Es la parte del DataFrame que nos sirve de salida para entrenar.
+        :param num_epochs: Es el número de Epochs para entrenar a la red neuronal.
+        :return: No se devuelve nada.
+        """
+        self.model.compile(loss="mean_squared_error", optimizer=keras.optimizers.Adam())
+        self.model.fit(train_input, train_target, epochs=num_epochs, verbose=0)
+
+    def test_model(self, test_input, test_target):
+        """
+        Esta función será para testear la red neuronal.
+        :param test_input: Es la parte del DataFrame que nos sirve de entrada para testear.
+        :param test_target: Es la parte del DataFrame que nos sirve de salida para testear.
+        :return: los resultados de la evaluación de la red neuronal.
+        """
+        results = self.model.evaluate(test_input, test_target)
+        return results
+
+    def predict(self, input_data):
+        """
+        Esta función nos sirve para hacer las predicciones de la red neuronal.
+        :param input_data: Son los datos sobre los que se quiere hacer una predicción.
+        :return: La predicción.
+        """
+        return self.model.predict(input_data)
