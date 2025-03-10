@@ -14,6 +14,7 @@ class NeuronalNetworkX:
         self.nodeID: int =0
         self.model=Sequential()
         self.keras_path="my_model.keras"
+        self.loss=''
 
     def add_node(self, quantity):
         node_id=self.nodeID
@@ -207,6 +208,14 @@ class NeuronalNetworkX:
         """
         self.model.save(self.keras_path)
 
+    def set_loss(self, problem_type):
+        if problem_type == 'BINARY CLASSIFICATION':
+            self.loss='BinaryCrossentropy'
+        elif problem_type == 'REGRESSION':
+            self.loss='MeanSquaredError'
+        else:
+            self.loss='CategoricalCrossentropy'
+
     def train_model(self, train_input, train_target, num_epochs):
         """
         Este método será para entrenar la red neuronal.
@@ -215,7 +224,7 @@ class NeuronalNetworkX:
         :param num_epochs: Es el número de Epochs para entrenar a la red neuronal.
         :return: No se devuelve nada.
         """
-        self.model.compile(loss="mean_squared_error", optimizer=keras.optimizers.Adam())
+        self.model.compile(loss=self.loss, optimizer=keras.optimizers.Adam())
         self.model.fit(train_input, train_target, epochs=num_epochs, verbose=0)
 
     def test_model(self, test_input, test_target):

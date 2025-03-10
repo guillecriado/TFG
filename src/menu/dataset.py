@@ -45,11 +45,11 @@ class Dataset:
         type=""
         if pd.api.types.is_numeric_dtype(self.df_outputs):
             if self.df_outputs.nunique() >= 10:
-                type="REGRESSION"
+                type='REGRESSION'
             else:
-                type="BINARY CLASSIFICATION"
+                type='BINARY CLASSIFICATION'
         elif isinstance(self.df_outputs, pd.CategoricalDtype) or pd.api.types.is_string_dtype(self.df_outputs):
-            type="CLASSIFICATION"
+            type='CLASSIFICATION'
         else:
             type="ERROR"
 
