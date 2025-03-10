@@ -1,3 +1,4 @@
+import keras
 import networkx as nx
 from keras.src.models import Sequential
 from keras.src.layers import Dense
@@ -12,6 +13,8 @@ class NeuronalNetworkX:
         self.outputNeurons= list()
         self.nodeID: int =0
         self.model=Sequential()
+        self.keras_path="my_model.keras"
+        self.loss=''
 
     def add_node(self, quantity):
         node_id=self.nodeID
@@ -116,7 +119,7 @@ class NeuronalNetworkX:
 
     def __isFullyConnectedBottomUpAux(self,nxg_aux,size,layer_list):
         fullyConnected = True
-        next_layer_list = list(nxg_aux.predecessors(index=layer_list[0]))
+        next_layer_list = list(nxg_aux.predecessors(layer_list[0]))
         i = 1
         while i < size and fullyConnected == True:
             x = layer_list[i]
@@ -160,13 +163,24 @@ class NeuronalNetworkX:
             self.add_node(1)
 
     def parseKeras(self):
+        """
+        Método para parsear el objeto NetworkX a Keras.
+        :return:
+        """
         nxg_aux = self.nxg.copy()
         hidden_layer=list(nxg_aux.successors(0))
         self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
         self.__explore_hidden_layers(hidden_layer,nxg_aux)
 
 
+
     def __explore_hidden_layers(self, layer, nxg_aux):
+        """
+        Método para explorar las capas ocultas de la red neuronal para su parseo a Keras.
+        :param layer: Capa a explorar.
+        :param nxg_aux: Objeto de NetworkX auxiliar para no modificar el grafo principal.
+        :return: void.
+        """
         size_actual_later=self.__get_neurons_of_layer(layer, nxg_aux)
         next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
         size_next_layer=len(next_layer)
@@ -178,6 +192,55 @@ class NeuronalNetworkX:
 
 
     def __get_neurons_of_layer(self, layer, nxg_aux):
-        quantity_list=nxg_aux.nodes(data='quantity')
+        """
+        Método nos sirve para conseguir el número de neuronas que hay en una capa.
+        :param layer: Capa de la que queremos sacar el número de neuronas.
+        :param nxg_aux: Objeto NetworkX auxiliar para no modificar el grafo principal.
+        :return: Número de neuronas que hay en la capa.
+        """
+        quantity_list=nxg_aux.nodes(data='neurons')
         return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
 
+    def save_model(self):
+        """
+        Este método guardará el modelo de Keras en un archivo .keras .
+        :return:
+        """
+        self.model.save(self.keras_path)
+
+    def set_loss(self, problem_type):
+        if problem_type == 'BINARY CLASSIFICATION':
+            self.loss='BinaryCrossentropy'
+        elif problem_type == 'REGRESSION':
+            self.loss='MeanSquaredError'
+        else:
+            self.loss='CategoricalCrossentropy'
+
+    def train_model(self, train_input, train_target, num_epochs):
+        """
+        Este método será para entrenar la red neuronal.
+        :param train_input: Es la parte del DataFrame que nos sirve de entrada para entrenar.
+        :param train_target: Es la parte del DataFrame que nos sirve de salida para entrenar.
+        :param num_epochs: Es el número de Epochs para entrenar a la red neuronal.
+        :return: No se devuelve nada.
+        """
+        self.model.compile(loss=self.loss, optimizer=keras.optimizers.Adam())
+        self.model.fit(train_input, train_target, epochs=num_epochs, verbose=0)
+
+    def test_model(self, test_input, test_target):
+        """
+        Este método será para testear la red neuronal.
+        :param test_input: Es la parte del DataFrame que nos sirve de entrada para testear.
+        :param test_target: Es la parte del DataFrame que nos sirve de salida para testear.
+        :return: los resultados de la evaluación de la red neuronal.
+        """
+        results = self.model.evaluate(test_input, test_target)
+        return results
+
+    def predict(self, input_data):
+        """
+        Este método nos sirve para hacer las predicciones de la red neuronal.
+        :param input_data: Son los datos sobre los que se quiere hacer una predicción.
+        :return: La predicción.
+        """
+        return self.model.predict(input_data)
