@@ -40,7 +40,6 @@ class NeuronalNetworkX:
         else:
             return False
 
-
     def __color_assignment(self, quantity):
         color='black'
         if quantity == '':
@@ -172,8 +171,6 @@ class NeuronalNetworkX:
         self.model.add(Dense(self.numInputNeuron, input_dim=self.numInputNeuron, activation='relu'))
         self.__explore_hidden_layers(hidden_layer,nxg_aux)
 
-
-
     def __explore_hidden_layers(self, layer, nxg_aux):
         """
         Método para explorar las capas ocultas de la red neuronal para su parseo a Keras.
@@ -189,7 +186,6 @@ class NeuronalNetworkX:
             self.__explore_hidden_layers(next_layer, nxg_aux)
         else: # Is going to be the output layer
             self.model.add(Dense(size_actual_later,activation='sigmoid'))
-
 
     def __get_neurons_of_layer(self, layer, nxg_aux):
         """
