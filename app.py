@@ -8,7 +8,7 @@ from src.neuronalNetworks.neuronal_Network_Pyvis import PyVisNeuronalNetwork
 app = Flask(__name__)
 
 # Asegurar que el directorio static/graphs existe
-os.makedirs("src/static/graphs", exist_ok=True)
+os.makedirs("static/graphs", exist_ok=True)
 
 # Crear una instancia de NeuronalNetworkX y PyVisNeuronalNetwork
 nx_graph = NeuronalNetworkX(3,1)  # Aquí asumo que puedes inicializarlo sin argumentos
@@ -18,6 +18,8 @@ pyvis_graph = PyVisNeuronalNetwork()
 
 @app.route('/')
 def index():
+    # Asegurar que el directorio static/graphs existe
+    #os.makedirs("static/graphs", exist_ok=True)
     # Generar el grafo antes de renderizar la plantilla
     nx_graph.defaultNetwork()
     pyvis_graph.actualise_graph(nx_graph)  # Convierte el grafo de NetworkX a PyVis
