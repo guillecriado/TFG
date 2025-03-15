@@ -1,5 +1,7 @@
+import os
+
 import pyvis as pv
-from neuronal_NetworkX import NeuronalNetworkX
+from src.neuronalNetworks.neuronal_NetworkX import NeuronalNetworkX
 
 
 class PyVisNeuronalNetwork:
@@ -11,5 +13,6 @@ class PyVisNeuronalNetwork:
         self.graph.from_nx(nx.nxg)
 
     def generate_HTML(self):
-        self.graph.save_graph("pyvis.html")
+        self.graph.save_graph("static/graphs/pyvis.html")
+
 

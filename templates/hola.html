@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hola desde Flask</title>
+</head>
+<body>
+    <h1>Hola desde Flask</h1>
+
+    <!-- Mostrar el grafo de PyVis -->
+    <iframe src="{{ url_for('static', filename='graphs/pyvis.html') }}" width="100%" height="600px" style="border:none;"></iframe>
+</body>
+</html>
