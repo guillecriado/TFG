@@ -1,0 +1,15 @@
+import pyvis as pv
+from neuronal_NetworkX import NeuronalNetworkX
+
+
+class PyVisNeuronalNetwork:
+    def __init__(self):
+        self.graph : pv.network.Network = None
+
+    def actualise_graph(self, nx: NeuronalNetworkX):
+        self.graph = pv.network.Network()
+        self.graph.from_nx(nx.nxg)
+
+    def generate_HTML(self):
+        self.graph.save_graph("pyvis.html")
+
