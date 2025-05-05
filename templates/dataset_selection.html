@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Selection</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 40px;
+            font-weight: normal;
+        }
+
+        .content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .left-column {
+            flex: 3;
+            border-right: 1px solid #e0e0e0;
+            padding-right: 20px;
+        }
+
+        .right-column {
+            flex: 2;
+            padding-left: 20px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .dataset-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .dataset-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dataset-card:hover {
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            border-color: #999;
+        }
+
+        .dataset-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .dataset-card p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #999;
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .upload-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .upload-note {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .continue-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            background-color: #000;
+        }
+
+        .selected {
+            border: 2px solid #4a90e2;
+            background-color: #f5f9ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DATASET SELECTION</h1>
+
+        <div class="content">
+            <div class="left-column">
+                <h2>Select one real dataset</h2>
+                <p class="subtitle">Select one dataset from Scikit-Learn</p>
+
+                <div class="dataset-options">
+                    <div class="dataset-card">
+                        <h3>Olivetti Faces</h3>
+                        <p>This dataset contains a set of face images taken between April 1992 and 1994 at AT&T Laboratories Cambridge.</p>
+                    </div>
+
+                    <div class="dataset-card">
+                        <h3>The 20 newsgroups dataset</h3>
+                        <p>The 20 newsgroups dataset comprises around 18,000 newsgroups post on 20 topics split in two subsets.</p>
+                    </div>
+
+                    <div class="dataset-card">
+                        <h3>The Labeled Faces in the Wild face recognition</h3>
+                        <p>This dataset is a collection of JPEG pictures of famous people collected over the internet.</p>
+                    </div>
+
+                    <div class="dataset-card">
+                        <h3>Forest covertypes</h3>
+                        <p>The samples in this dataset correspond to 30×30m patches of forest in the US.</p>
+                    </div>
+
+                    <div class="dataset-card">
+                        <h3>RCV1</h3>
+                        <p>Reuters Corpus Volume I (RCV1) is an archive of over 800,000 manually categorized newswire stories made available by Reuters, Ltd.</p>
+                    </div>
+
+                    <div class="dataset-card">
+                        <h3>Californian Housing dataset</h3>
+                        <p>We collected information on the variables using all the block groups in California from the 1990 Cens us. In this sample a block group on average includes 1425.5 individuals living in a geographically compact area.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <h2>Upload a dataset</h2>
+                <p class="subtitle">Upload a dataset with .csv format</p>
+
+                <div class="upload-area">
+                    <div class="upload-icon">
+                        <svg width="50" height="60" viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 0H40C45.5 0 50 4.5 50 10V50C50 55.5 45.5 60 40 60H10C4.5 60 0 55.5 0 50V10C0 4.5 4.5 0 10 0ZM10 5C7.25 5 5 7.25 5 10V50C5 52.75 7.25 55 10 55H40C42.75 55 45 52.75 45 50V10C45 7.25 42.75 5 40 5H10Z" fill="#333"/>
+                        </svg>
+                    </div>
+                    <div class="upload-title">Upload Dataset</div>
+                    <p class="upload-text">Drop your files here or click here</p>
+                    <p class="upload-note">Please upload a csv file</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Page 1 of 5</div>
+            <button class="continue-btn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // Añadir funcionalidad para seleccionar un dataset
+        const datasetCards = document.querySelectorAll('.dataset-card');
+
+        datasetCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Eliminar la clase 'selected' de todas las tarjetas
+                datasetCards.forEach(c => c.classList.remove('selected'));
+
+                // Añadir la clase 'selected' a la tarjeta clicada
+                this.classList.add('selected');
+            });
+        });
+
+        // Simular funcionalidad para el área de carga
+        const uploadArea = document.querySelector('.upload-area');
+
+        uploadArea.addEventListener('click', function() {
+            alert('Esta funcionalidad cargaría un selector de archivos');
+        });
+
+        // Simular funcionalidad para el botón de continuar
+        const continueBtn = document.querySelector('.continue-btn');
+
+        continueBtn.addEventListener('click', function() {
+            const selectedDataset = document.querySelector('.dataset-card.selected');
+
+            if (selectedDataset) {
+                alert('Dataset seleccionado: ' + selectedDataset.querySelector('h3').textContent);
+            } else {
+                alert('Por favor, selecciona un dataset o carga uno nuevo');
+            }
+        });
+    </script>
+</body>
+</html>
