@@ -79,17 +79,19 @@
         .dataset-card:hover {
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
             border-color: #999;
+            background-color: #333;
+            color: white;
         }
 
         .dataset-card h3 {
             font-size: 16px;
             margin-bottom: 10px;
-            color: #333;
+            color: inherit;
         }
 
         .dataset-card p {
             font-size: 13px;
-            color: #666;
+            color: inherit;
             line-height: 1.4;
         }
 
@@ -104,10 +106,17 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .upload-area:hover {
             border-color: #999;
+            background-color: #f5f5f5;
+        }
+
+        .upload-area.dragover {
+            border-color: #333;
+            background-color: #f0f0f0;
         }
 
         .upload-icon {
@@ -161,8 +170,23 @@
         }
 
         .selected {
-            border: 2px solid #4a90e2;
-            background-color: #f5f9ff;
+            border: 2px solid #333;
+            background-color: #333;
+            color: white;
+        }
+
+        .selected h3, .selected p {
+            color: white;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
         }
     </style>
 </head>
@@ -176,34 +200,34 @@
                 <p class="subtitle">Select one dataset from Scikit-Learn</p>
 
                 <div class="dataset-options">
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="olivetti_faces">
                         <h3>Olivetti Faces</h3>
                         <p>This dataset contains a set of face images taken between April 1992 and 1994 at AT&T Laboratories Cambridge.</p>
                     </div>
 
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="20newsgroups">
                         <h3>The 20 newsgroups dataset</h3>
                         <p>The 20 newsgroups dataset comprises around 18,000 newsgroups post on 20 topics split in two subsets.</p>
                     </div>
 
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="lfw">
                         <h3>The Labeled Faces in the Wild face recognition</h3>
                         <p>This dataset is a collection of JPEG pictures of famous people collected over the internet.</p>
                     </div>
 
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="covtype">
                         <h3>Forest covertypes</h3>
                         <p>The samples in this dataset correspond to 30×30m patches of forest in the US.</p>
                     </div>
 
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="rcv1">
                         <h3>RCV1</h3>
                         <p>Reuters Corpus Volume I (RCV1) is an archive of over 800,000 manually categorized newswire stories made available by Reuters, Ltd.</p>
                     </div>
 
-                    <div class="dataset-card">
+                    <div class="dataset-card" data-name="california_housing">
                         <h3>Californian Housing dataset</h3>
-                        <p>We collected information on the variables using all the block groups in California from the 1990 Cens us. In this sample a block group on average includes 1425.5 individuals living in a geographically compact area.</p>
+                        <p>We collected information on the variables using all the block groups in California from the 1990 Census. In this sample a block group on average includes 1425.5 individuals living in a geographically compact area.</p>
                     </div>
                 </div>
             </div>
@@ -212,29 +236,41 @@
                 <h2>Upload a dataset</h2>
                 <p class="subtitle">Upload a dataset with .csv format</p>
 
-                <div class="upload-area">
-                    <div class="upload-icon">
-                        <svg width="50" height="60" viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M10 0H40C45.5 0 50 4.5 50 10V50C50 55.5 45.5 60 40 60H10C4.5 60 0 55.5 0 50V10C0 4.5 4.5 0 10 0ZM10 5C7.25 5 5 7.25 5 10V50C5 52.75 7.25 55 10 55H40C42.75 55 45 52.75 45 50V10C45 7.25 42.75 5 40 5H10Z" fill="#333"/>
-                        </svg>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-area" id="drop-area">
+                        <div class="upload-icon">
+                            <svg width="50" height="60" viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 0H40C45.5 0 50 4.5 50 10V50C50 55.5 45.5 60 40 60H10C4.5 60 0 55.5 0 50V10C0 4.5 4.5 0 10 0ZM10 5C7.25 5 5 7.25 5 10V50C5 52.75 7.25 55 10 55H40C42.75 55 45 52.75 45 50V10C45 7.25 42.75 5 40 5H10Z" fill="#333"/>
+                                <path d="M25 15L15 30H20V45H30V30H35L25 15Z" fill="#333"/>
+                            </svg>
+                        </div>
+                        <div class="upload-title">Upload Dataset</div>
+                        <p class="upload-text">Drop your files here or click here</p>
+                        <p class="upload-note">Please upload a csv file</p>
+                        <input type="file" id="file-input" name="file" accept=".csv">
+                        <div id="file-name"></div>
                     </div>
-                    <div class="upload-title">Upload Dataset</div>
-                    <p class="upload-text">Drop your files here or click here</p>
-                    <p class="upload-note">Please upload a csv file</p>
-                </div>
+                </form>
             </div>
         </div>
 
         <div class="footer">
             <div class="page-indicator">Page 1 of 5</div>
-            <button class="continue-btn">Continue</button>
+            <button class="continue-btn" id="continue-btn">Continue</button>
         </div>
     </div>
 
     <script>
         // Añadir funcionalidad para seleccionar un dataset
         const datasetCards = document.querySelectorAll('.dataset-card');
+        const fileInput = document.getElementById('file-input');
+        const dropArea = document.getElementById('drop-area');
+        const fileName = document.getElementById('file-name');
+        const uploadForm = document.getElementById('upload-form');
+        let selectedDatasetName = null;
+        let uploadedFile = null;
 
+        // Manejar selección de tarjetas de conjunto de datos
         datasetCards.forEach(card => {
             card.addEventListener('click', function() {
                 // Eliminar la clase 'selected' de todas las tarjetas
@@ -242,26 +278,124 @@
 
                 // Añadir la clase 'selected' a la tarjeta clicada
                 this.classList.add('selected');
+
+                // Guardar el nombre del dataset seleccionado
+                selectedDatasetName = this.getAttribute('data-name');
+
+                // Resetear cualquier archivo cargado
+                uploadedFile = null;
+                fileName.textContent = '';
             });
         });
 
-        // Simular funcionalidad para el área de carga
-        const uploadArea = document.querySelector('.upload-area');
-
-        uploadArea.addEventListener('click', function() {
-            alert('Esta funcionalidad cargaría un selector de archivos');
+        // Evento de clic para el área de carga
+        dropArea.addEventListener('click', function(e) {
+            fileInput.click();
         });
 
-        // Simular funcionalidad para el botón de continuar
-        const continueBtn = document.querySelector('.continue-btn');
+        // Eventos para arrastrar y soltar
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
 
-        continueBtn.addEventListener('click', function() {
-            const selectedDataset = document.querySelector('.dataset-card.selected');
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
-            if (selectedDataset) {
-                alert('Dataset seleccionado: ' + selectedDataset.querySelector('h3').textContent);
+        // Añadir clase cuando se arrastra sobre el área
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, function() {
+                dropArea.classList.add('dragover');
+            }, false);
+        });
+
+        // Quitar clase cuando se sale del área o se suelta
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, function() {
+                dropArea.classList.remove('dragover');
+            }, false);
+        });
+
+        // Manejar la subida del archivo
+        dropArea.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        // Cuando se selecciona un archivo con el explorador
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length) {
+                const file = files[0];
+
+                // Verificar que sea un archivo CSV
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    uploadedFile = file;
+                    fileName.textContent = `Selected file: ${file.name}`;
+
+                    // Deseleccionar cualquier dataset de la izquierda
+                    datasetCards.forEach(c => c.classList.remove('selected'));
+                    selectedDatasetName = null;
+                } else {
+                    alert('Please select a CSV file.');
+                    fileInput.value = '';
+                    fileName.textContent = '';
+                }
+            }
+        }
+
+        // Manejar el botón continuar
+        document.getElementById('continue-btn').addEventListener('click', function() {
+            if (selectedDatasetName) {
+                // Enviar el nombre del dataset seleccionado al servidor
+                fetch('/select_dataset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ dataset_name: selectedDatasetName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al seleccionar el dataset');
+                });
+            } else if (uploadedFile) {
+                // Crear FormData para enviar el archivo
+                const formData = new FormData();
+                formData.append('file', uploadedFile);
+
+                // Enviar el archivo al servidor
+                fetch('/upload_dataset', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al subir el archivo');
+                });
             } else {
-                alert('Por favor, selecciona un dataset o carga uno nuevo');
+                alert('Please select a dataset or upload a CSV file');
             }
         });
     </script>
