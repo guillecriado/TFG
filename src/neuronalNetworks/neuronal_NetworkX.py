@@ -19,12 +19,12 @@ class NeuronalNetworkX:
     def add_node(self, quantity):
         node_id=self.nodeID
         self.nodeID+=1 # Incrementamos el ID para el siguiente nodo
-        label=str("ID:"+str(node_id)+"Neurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
+        label=str("ID:"+str(node_id)+"\nNeurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
         color=self.__color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
         self.nxg.add_node(node_id,label=label,color=color, neurons=quantity)
 
     def add_edge(self,source,target):
-        self.nxg.add_edge(source,target)
+        self.nxg.add_edge(source,target,color="36494E")
 
     def remove_node(self,node_id):
         if node_id in self.nxg:
@@ -41,13 +41,15 @@ class NeuronalNetworkX:
             return False
 
     def __color_assignment(self, quantity):
-        color='black'
-        if quantity == '':
-            color = 'blue'
-        elif 1 < int(quantity) < 10:
-            color = 'red'
+        color='B7CECE'
+        if quantity == 1:
+            color = '#B7CECE'
+        elif 1 < int(quantity) < 5:
+            color = '#9BAEBC'
+        elif 5 < int(quantity) < 10:
+            color = '#597081'
         elif int(quantity) >= 10:
-            color = 'green'
+            color = '#384955'
         return color
 
     def isFullyConnectedTopDown(self):
