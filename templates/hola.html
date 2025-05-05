@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hola desde Flask</title>
+    <style>
+        .neuron-button {
+            padding: 10px 20px;
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .neuron-button:hover {
+            background-color: black;
+            color: white;
+        }
+
+        /* Estilos para el modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .submit-btn {
+            padding: 8px 15px;
+            background-color: black;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+
+        #pyvisFrame {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hola desde Flask</h1>
+
+    <button class="neuron-button" id="addNeuronBtn">Add neuron</button>
+
+    <!-- Modal para solicitar cantidad de neuronas -->
+    <div id="neuronModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Añadir Neuronas</h2>
+            <form id="neuronForm">
+                <div class="form-group">
+                    <label for="neuronCount">Cantidad de neuronas:</label>
+                    <input type="number" id="neuronCount" name="neuronCount" min="1" required>
+                </div>
+                <button type="submit" class="submit-btn">Añadir</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mostrar el grafo de PyVis con un ID para facilitar su recarga -->
+    <iframe id="pyvisFrame" src="{{ url_for('static', filename='graphs/pyvis.html') }}?v={{ cache_buster }}"></iframe>
+
+    <script>
+        // Obtener elementos del DOM
+        const modal = document.getElementById('neuronModal');
+        const btn = document.getElementById('addNeuronBtn');
+        const closeBtn = document.querySelector('.close');
+        const form = document.getElementById('neuronForm');
+        const pyvisFrame = document.getElementById('pyvisFrame');
+
+        // Abrir modal al hacer clic en el botón
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        // Cerrar modal al hacer clic en la X
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera del contenido
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Función para recargar el iframe de PyVis
+        function reloadPyvisGraph() {
+            // Añadir un parámetro de consulta aleatorio para evitar caché
+            const timestamp = new Date().getTime();
+            pyvisFrame.src = "{{ url_for('static', filename='graphs/pyvis.html') }}?v=" + timestamp;
+        }
+
+        // Manejar envío del formulario
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const neuronCount = document.getElementById('neuronCount').value;
+
+            // Enviar datos al servidor
+            fetch('/add_neuron', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ neuronCount: neuronCount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Recargar el gráfico PyVis
+                    reloadPyvisGraph();
+                    alert('Se han añadido ' + neuronCount + ' neuronas');
+                    modal.style.display = 'none';
+                    // Limpiar el campo
+                    document.getElementById('neuronCount').value = '';
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Hubo un error al añadir las neuronas');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-import keras
 import networkx as nx
 from keras.src.models import Sequential
 from keras.src.layers import Dense
+from keras.api.optimizers import Adam
 
 
 class NeuronalNetworkX:
@@ -220,7 +220,7 @@ class NeuronalNetworkX:
         :param num_epochs: Es el número de Epochs para entrenar a la red neuronal.
         :return: No se devuelve nada.
         """
-        self.model.compile(loss=self.loss, optimizer=keras.optimizers.Adam())
+        self.model.compile(loss=self.loss, optimizer=Adam())
         self.model.fit(train_input, train_target, epochs=num_epochs, verbose=0)
 
     def test_model(self, test_input, test_target):
