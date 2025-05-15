@@ -326,7 +326,7 @@ def set_input_columns():
         return jsonify({
             'status': 'success',
             'message': 'Input columns set successfully',
-            'redirect': url_for('network_design')  # Redirect to network design
+            'redirect': url_for('data_preprocessing')  # Redirect to data preprocessing instead
         })
     except Exception as e:
         return jsonify({
@@ -378,6 +378,91 @@ def add_neuron():
             'message': str(e)
         }), 500
 
+
+@app.route('/data_preprocessing')
+def data_preprocessing():
+    """Route for data preprocessing page"""
+    return render_template("data_preprocessing.html")
+
+
+@app.route('/get_problem_type', methods=['GET'])
+def get_problem_type():
+    global current_dataset
+
+    if current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No dataset has been loaded yet'
+        }), 400
+
+    try:
+        problem_type = current_dataset.problem_type()
+        if problem_type == "ERROR":
+            raise Exception ("Problem type error")
+        return jsonify({
+            'status': 'success',
+            'problem_type': problem_type
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/process_data_preprocessing', methods=['POST'])
+def process_data_preprocessing():
+    global current_dataset
+
+    if current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No dataset has been loaded yet'
+        }), 400
+
+    data = request.json
+
+    try:
+        # Update train_size from train_test_split
+        if 'train_test_split' in data:
+            current_dataset.train_size = float(data['train_test_split']) / 100.0
+
+        # Process cleaning options here
+        cleaning_option = data.get('cleaning_option', '')
+        # Add your cleaning logic based on the selected option
+
+        # Process standardization model
+        standardization_model = data.get('standardization_model', 'none')
+        # Add your standardization logic based on the selected model
+
+        # Process network configuration
+        network_type = data.get('network_type', 'empty')
+
+        if network_type == 'standard':
+            # Generate standard network with hidden layers and neurons per layer
+            hidden_layers = int(data.get('hidden_layers', 1))
+            neurons_per_layer = int(data.get('neurons_per_layer', 5))
+
+            # Initialize your network with these parameters
+            # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
+            # nx_graph.create_standard_network(hidden_layers, neurons_per_layer)
+        else:
+            nx_graph=NeuronalNetworkX(0,0)
+            nx_graph.defaultNetwork()
+            # Initialize an empty network
+            # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
+
+        # Redirect to the network design page
+        return jsonify({
+            'status': 'success',
+            'message': 'Data preprocessing settings applied successfully',
+            'redirect': url_for('network_design')
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
