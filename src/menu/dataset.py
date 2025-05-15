@@ -3,18 +3,17 @@ from sklearn.model_selection import train_test_split
 
 class Dataset:
 
-    def __init__(self, file_name):
-        self.path = file_name # TODO: Poner link completo cuando esté el cargador del dataset
-        self.df = pd.read_csv(self.path)
+    def __init__(self, file_name, extension):
+        if(extension == '.csv'):
+            self.path = file_name
+            self.df = pd.read_csv(self.path)
+        elif(extension == 'sklearn'):
+            self.path = ""
+            self.df = file_name
         self.df_inputs = self.df
         self.df_outputs = self.df
         self.train_size=0.8
         self.random_state=42
-
-    def __show_columns(self):
-        print("Columnas disponibles en el dataset:")
-        for i, col in enumerate(self.df.columns):
-            print(f"{i}: {col}")
 
     def input_columns_selection(self):
         seleccion = input("Introduce los números de las columnas que quieres usar como input, separados por comas: ")
