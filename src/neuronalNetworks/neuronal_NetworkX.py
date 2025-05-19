@@ -5,6 +5,8 @@ from keras.api.optimizers import Adam
 
 
 class NeuronalNetworkX:
+
+    #Constructor
     def __init__(self, numImputs, numOutputs):
         self.nxg = nx.DiGraph()
         self.numInputNeuron=numImputs
@@ -16,10 +18,36 @@ class NeuronalNetworkX:
         self.keras_path="my_model.keras"
         self.loss=''
 
-    def add_node(self, quantity):
+    #Setters and getters
+
+    def set_NumInputs(self,numImputs):
+        self.numInputNeuron=numImputs
+    def set_NumOutputs(self,numOutputs):
+        self.numOutputNeuron=numOutputs
+
+    def __get_neurons_of_layer(self, layer, nxg_aux):
+        """
+        Método nos sirve para conseguir el número de neuronas que hay en una capa.
+        :param layer: Capa de la que queremos sacar el número de neuronas.
+        :param nxg_aux: Objeto NetworkX auxiliar para no modificar el grafo principal.
+        :return: Número de neuronas que hay en la capa.
+        """
+        quantity_list = nxg_aux.nodes(data='neurons')
+        return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
+
+    def set_loss(self, problem_type):
+        if problem_type == 'BINARY CLASSIFICATION':
+            self.loss='BinaryCrossentropy'
+        elif problem_type == 'REGRESSION':
+            self.loss='MeanSquaredError'
+        else:
+            self.loss='CategoricalCrossentropy'
+
+    #Class methods
+    def add_node(self, quantity, neuron_type):
         node_id=self.nodeID
         self.nodeID+=1 # Incrementamos el ID para el siguiente nodo
-        label=str("ID:"+str(node_id)+"\nNeurons:"+str(quantity)) # Será la cantidad de neuronas que almacena el nodoy su id
+        label=str("ID:"+str(node_id)+"\nNeurons:"+str(quantity)+"\nNeuron type: "+str(neuron_type)) # Será la cantidad de neuronas que almacena el nodoy su id
         color=self.__color_assignment(quantity) # Dependiendo de las neuronas que almacene será de un color u otro
         self.nxg.add_node(node_id,label=label,color=color, neurons=quantity)
 
@@ -137,31 +165,42 @@ class NeuronalNetworkX:
             else:
                 return fullyConnected
 
-    def defaultNetwork(self):
-        for i in range(self.numInputNeuron): # Capa de entrada
+    def defaultNetwork(self, hidden_layers, hidden_neurons):
+        print("Default Network Inputs: "+str(self.numInputNeuron)+" Outputs: "+str(self.numOutputNeuron))
+        count_inputs=0
+        previous_layer=list()
+        for i in range(self.numInputNeuron):  # Capa de entrada
+            count_inputs+=1
+            print("Input: "+str(count_inputs))
             self.inputNeurons.append(self.nodeID)
-            self.add_node(1)
-        for j in range(self.numOutputNeuron): # Capa de salida
+            self.add_node(1,'Input Neuron')
+        for j in range(self.numOutputNeuron):  # Capa de salida
             self.outputNeurons.append(self.nodeID)
-            self.add_node(1)
+            self.add_node(1,'Target Neuron')
+        previous_layer = self.inputNeurons
+        if hidden_layers>0 and hidden_neurons>0:
+            for k in range(hidden_layers): # Capas oculta
+                actual_layer=list()
+                first_hidden_neuron=self.nodeID
+                last_hidden_neuron=first_hidden_neuron+hidden_neurons
+                for l in range(first_hidden_neuron, last_hidden_neuron):
+                    actual_layer.append(self.nodeID)
+                    self.add_node(1,('Hidden Neuron Layer: '+str(k+1)))
+                    for m in previous_layer:
+                        self.add_edge(m,l)
+                previous_layer=actual_layer
 
-        first_hidden_neuron=self.nodeID
-        last_hidden_neuron=first_hidden_neuron+6
-
-        for k in range(first_hidden_neuron,last_hidden_neuron):  # Capa oculta
-            self.add_node(1)
-            for l in self.inputNeurons:
-                self.add_edge(l,k)
-            for m in self.outputNeurons:
-                self.add_edge(k,m)
+            for n in previous_layer:
+                for p in self.outputNeurons:
+                    self.add_edge(n,p)
 
     def simpleNetwork(self):
         for i in range(self.numInputNeuron): # Capa de entrada
             self.inputNeurons.append(self.nodeID)
-            self.add_node(1)
+            self.add_node(1,"Input Neuron")
         for j in range(self.numOutputNeuron): # Capa de salida
             self.outputNeurons.append(self.nodeID)
-            self.add_node(1)
+            self.add_node(1,'Target Neuron')
 
     def parseKeras(self):
         """
@@ -189,30 +228,12 @@ class NeuronalNetworkX:
         else: # Is going to be the output layer
             self.model.add(Dense(size_actual_later,activation='sigmoid'))
 
-    def __get_neurons_of_layer(self, layer, nxg_aux):
-        """
-        Método nos sirve para conseguir el número de neuronas que hay en una capa.
-        :param layer: Capa de la que queremos sacar el número de neuronas.
-        :param nxg_aux: Objeto NetworkX auxiliar para no modificar el grafo principal.
-        :return: Número de neuronas que hay en la capa.
-        """
-        quantity_list=nxg_aux.nodes(data='neurons')
-        return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
-
     def save_model(self):
         """
         Este método guardará el modelo de Keras en un archivo .keras .
         :return:
         """
         self.model.save(self.keras_path)
-
-    def set_loss(self, problem_type):
-        if problem_type == 'BINARY CLASSIFICATION':
-            self.loss='BinaryCrossentropy'
-        elif problem_type == 'REGRESSION':
-            self.loss='MeanSquaredError'
-        else:
-            self.loss='CategoricalCrossentropy'
 
     def train_model(self, train_input, train_target, num_epochs):
         """
@@ -242,3 +263,9 @@ class NeuronalNetworkX:
         :return: La predicción.
         """
         return self.model.predict(input_data)
+
+    def clear_graph(self):
+        self.nxg = nx.DiGraph()
+        self.inputNeurons = list()  # Reiniciar la lista de neuronas de entrada
+        self.outputNeurons = list()  # Reiniciar la lista de neuronas de salida
+        self.nodeID = 0 # Reiniciar nodeID si quieres que los IDs empiecen desde 0 cada vez

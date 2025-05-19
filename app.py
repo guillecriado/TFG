@@ -13,6 +13,8 @@ from src.menu import dataset
 app = Flask(__name__)
 app.secret_key = 'neural_network_app_secret_key'  # For flash messages
 
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Deshabilitar caché para archivos estáticos
+
 # Directory for uploaded files
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -30,25 +32,21 @@ global current_dataset
 # Inicializar la red neuronal si no existe
 def initialize_networks():
     global nx_graph, pyvis_graph
-
     # Comprobar si la red ya ha sido inicializada
     if 'nx_graph' not in globals() or nx_graph is None:
         # Valores predeterminados para la red - ajústalos según tus necesidades
         num_inputs = 3
         num_outputs = 1
-        nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
-        nx_graph.defaultNetwork()  # Inicializa con la red por defecto
-
+        #nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
+        #nx_graph.defaultNetwork(1,6)  # Inicializa con la red por defecto
     # Inicializar o actualizar la red PyVis
     if 'pyvis_graph' not in globals() or pyvis_graph is None:
         pyvis_graph = PyVisNeuronalNetwork()
-
     pyvis_graph.actualise_graph(nx_graph)
-    pyvis_graph.generate_HTML()
+    pyvis_graph.generate_HTML(nx_graph)
 
 
-# Inicializar las redes al inicio
-initialize_networks()
+
 
 
 @app.route('/')
@@ -71,9 +69,6 @@ def select_dataset():
         }), 400
 
     try:
-        # Here you would load the specified dataset from scikit-learn
-        # For now, we'll just acknowledge the selection
-
         from sklearn import datasets
 
         dataset=''
@@ -299,6 +294,7 @@ def set_input_columns():
 
     data = request.json
     input_columns = data.get('input_columns', [])
+    print(len(input_columns))
 
     if not input_columns:
         return jsonify({
@@ -312,16 +308,17 @@ def set_input_columns():
 
         # Get the number of inputs and outputs for network initialization
         num_inputs = len(input_columns)
+        print(num_inputs)
         num_outputs = len(current_dataset.df_outputs.columns)
+        print(num_outputs)
 
-        # Reinitialize the network with the correct number of inputs and outputs
         nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
-        nx_graph.defaultNetwork()
+        #nx_graph.defaultNetwork(0, 0)
 
         # Update the PyVis graph
         if 'pyvis_graph' in globals() and pyvis_graph is not None:
             pyvis_graph.actualise_graph(nx_graph)
-            pyvis_graph.generate_HTML()
+            pyvis_graph.generate_HTML(nx_graph)
 
         return jsonify({
             'status': 'success',
@@ -337,7 +334,20 @@ def set_input_columns():
 
 @app.route('/network_design')
 def network_design():
+    pyvis_graph = PyVisNeuronalNetwork()
+    pyvis_graph.generate_HTML(nx_graph)
     # This would be your next page after input selection
+    print("NODOS: ")
+    print(nx_graph.nxg.nodes())
+    print(pyvis_graph.graph.get_nodes())
+    print("\nAristas")
+    print(nx_graph.nxg.edges())
+    print(pyvis_graph.graph.get_edges())
+
+    # Update the PyVis graph
+    if 'pyvis_graph' in globals() and pyvis_graph is not None:
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
     return render_template("hola.html", cache_buster=os.urandom(8).hex())
 
 
@@ -357,7 +367,7 @@ def add_neuron():
 
     try:
         # Añadir un nuevo nodo con la cantidad de neuronas especificada
-        nx_graph.add_node(neuron_count)
+        nx_graph.add_node(neuron_count,'Hidden Neuron')
 
         # Opcional: conectar el nuevo nodo con algunos existentes
         # Esto dependerá de tu lógica específica de conexión
@@ -365,7 +375,7 @@ def add_neuron():
 
         # Actualizar y generar el gráfico PyVis
         pyvis_graph.actualise_graph(nx_graph)
-        pyvis_graph.generate_HTML()
+        pyvis_graph.generate_HTML(nx_graph)
 
         return jsonify({
             'status': 'success',
@@ -425,16 +435,22 @@ def process_data_preprocessing():
     try:
         # Update train_size from train_test_split
         if 'train_test_split' in data:
-            current_dataset.train_size = float(data['train_test_split']) / 100.0
+            current_dataset.set_train_test_size((float(data['train_test_split']) / 100.0))
 
         # Process cleaning options here
         cleaning_option = data.get('cleaning_option', '')
-        # Add your cleaning logic based on the selected option
-
+        if cleaning_option == '':
+            current_dataset.cleaning(None,'')
+        elif cleaning_option == 'custom':
+            custom_value = data.get('custom_value', '')
+            current_dataset.cleaning(cleaning_option,custom_value)
+        else:
+            current_dataset.cleaning(cleaning_option,'')
         # Process standardization model
         standardization_model = data.get('standardization_model', 'none')
         # Add your standardization logic based on the selected model
-
+        if standardization_model != 'none':
+            current_dataset.set_standardization(standardization_model)
         # Process network configuration
         network_type = data.get('network_type', 'empty')
 
@@ -442,15 +458,20 @@ def process_data_preprocessing():
             # Generate standard network with hidden layers and neurons per layer
             hidden_layers = int(data.get('hidden_layers', 1))
             neurons_per_layer = int(data.get('neurons_per_layer', 5))
-
-            # Initialize your network with these parameters
+            print("Input: "+str(nx_graph.numInputNeuron))
+            print("Output: "+str(nx_graph.numOutputNeuron))
+            nx_graph.defaultNetwork(hidden_layers,neurons_per_layer)
+            # TODO Initialize your network with these parameters
             # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
             # nx_graph.create_standard_network(hidden_layers, neurons_per_layer)
         else:
-            nx_graph=NeuronalNetworkX(0,0)
-            nx_graph.defaultNetwork()
-            # Initialize an empty network
+            nx_graph.defaultNetwork(0,0)
+            # TODO Initialize an empty network
             # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
+            # Update the PyVis graph
+
+        pyvis_graph = PyVisNeuronalNetwork()
+        pyvis_graph.generate_HTML(nx_graph)
 
         # Redirect to the network design page
         return jsonify({

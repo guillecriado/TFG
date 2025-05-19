@@ -12,7 +12,10 @@ class PyVisNeuronalNetwork:
         self.graph = pv.network.Network()
         self.graph.from_nx(nx.nxg)
 
-    def generate_HTML(self):
+    def generate_HTML(self, nx: NeuronalNetworkX):
+        # Asegurarse de limpiar cualquier contenido antiguo
+        self.graph = pv.network.Network()
+        self.graph.from_nx(nx.nxg)
         self.graph.save_graph("static/graphs/pyvis.html")
 
 
