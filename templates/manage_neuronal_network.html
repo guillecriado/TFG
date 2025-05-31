@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .action-button {
+            padding: 10px 20px;
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .graph-container {
+            flex: 1;
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #pyvisFrame {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        .train-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .train-button:hover {
+            background-color: #000;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 2px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 80%; /* 4 de 5 */
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border: 1px solid #888;
+            width: 350px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+            margin-top: -10px;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #000;
+        }
+
+        .delete-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .delete-button {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Edition</h1>
+
+        <div class="action-buttons">
+            <button class="action-button" id="addNeuronBtn">Add neuron</button>
+            <button class="action-button" id="addEdgeBtn">Add edge</button>
+            <div class="delete-buttons">
+                <button class="delete-button" id="deleteNodeBtn">Delete node</button>
+                <button class="delete-button" id="deleteEdgeBtn">Delete edge</button>
+            </div>
+        </div>
+
+        <div class="graph-container">
+            <iframe id="pyvisFrame" src="{{ url_for('static', filename='graphs/pyvis.html') }}?v={{ cache_buster }}"></iframe>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+            </div>
+            <button class="train-button" id="trainNetworkBtn">Train Neuronal Network</button>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Paso 4 de 5</div>
+        </div>
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress"></div>
+    </div>
+
+    <!-- Modal para añadir neuronas -->
+    <div id="neuronModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Add Neurons</div>
+            </div>
+            <form id="neuronForm">
+                <div class="form-group">
+                    <label for="neuronCount">Number of neurons:</label>
+                    <input type="number" id="neuronCount" name="neuronCount" min="1" required>
+                </div>
+                <button type="submit" class="submit-btn">Add neurons</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para añadir edges -->
+    <div id="edgeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Add Edge</div>
+            </div>
+            <form id="edgeForm">
+                <div class="form-group">
+                    <label for="sourceNode">Source node ID:</label>
+                    <input type="number" id="sourceNode" name="sourceNode" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="targetNode">Target node ID:</label>
+                    <input type="number" id="targetNode" name="targetNode" min="0" required>
+                </div>
+                <button type="submit" class="submit-btn">Add edge</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar nodo -->
+    <div id="deleteNodeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Delete Node</div>
+            </div>
+            <form id="deleteNodeForm">
+                <div class="form-group">
+                    <label for="nodeToDelete">Node ID to delete:</label>
+                    <input type="number" id="nodeToDelete" name="nodeToDelete" min="0" required>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    Note: Deleting a node will also remove all its edges.
+                </p>
+                <button type="submit" class="submit-btn" style="background-color: #dc3545;">Delete node</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar edge -->
+    <div id="deleteEdgeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Delete Edge</div>
+            </div>
+            <form id="deleteEdgeForm">
+                <div class="form-group">
+                    <label for="edgeSource">Source node ID:</label>
+                    <input type="number" id="edgeSource" name="edgeSource" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="edgeTarget">Target node ID:</label>
+                    <input type="number" id="edgeTarget" name="edgeTarget" min="0" required>
+                </div>
+                <button type="submit" class="submit-btn" style="background-color: #dc3545;">Delete edge</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Función para recargar el iframe de PyVis
+        function reloadPyvisGraph() {
+            const iframe = document.getElementById('pyvisFrame');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const timestamp = new Date().getTime();
+
+            // Mostrar el loading overlay
+            loadingOverlay.style.display = 'flex';
+
+            // Primero, limpia el src para forzar una recarga completa
+            iframe.src = 'about:blank';
+
+            // Luego, establece el nuevo src con timestamp
+            setTimeout(() => {
+                iframe.src = "{{ url_for('static', filename='graphs/pyvis.html') }}?v=" + timestamp;
+
+                // Ocultar el loading cuando el iframe se cargue
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500); // Pequeño delay para asegurar que el gráfico se renderice
+                };
+            }, 100);
+        }
+
+        // Manejo de modales
+        const modals = {
+            neuron: document.getElementById('neuronModal'),
+            edge: document.getElementById('edgeModal'),
+            deleteNode: document.getElementById('deleteNodeModal'),
+            deleteEdge: document.getElementById('deleteEdgeModal')
+        };
+
+        const buttons = {
+            neuron: document.getElementById('addNeuronBtn'),
+            edge: document.getElementById('addEdgeBtn'),
+            deleteNode: document.getElementById('deleteNodeBtn'),
+            deleteEdge: document.getElementById('deleteEdgeBtn'),
+            train: document.getElementById('trainNetworkBtn')
+        };
+
+        // Abrir modales
+        buttons.neuron.onclick = () => modals.neuron.style.display = 'block';
+        buttons.edge.onclick = () => modals.edge.style.display = 'block';
+        buttons.deleteNode.onclick = () => modals.deleteNode.style.display = 'block';
+        buttons.deleteEdge.onclick = () => modals.deleteEdge.style.display = 'block';
+
+        // Cerrar modales
+        document.querySelectorAll('.close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                this.closest('.modal').style.display = 'none';
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Añadir neuronas
+        document.getElementById('neuronForm').onsubmit = function(e) {
+            e.preventDefault();
+            const neuronCount = document.getElementById('neuronCount').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/add_neuron', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ neuronCount: neuronCount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.neuron.style.display = 'none';
+                    document.getElementById('neuronCount').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error adding neurons');
+            });
+        }
+
+        // Añadir edge
+        document.getElementById('edgeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const sourceNode = document.getElementById('sourceNode').value;
+            const targetNode = document.getElementById('targetNode').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/add_edge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    source: sourceNode,
+                    target: targetNode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.edge.style.display = 'none';
+                    document.getElementById('sourceNode').value = '';
+                    document.getElementById('targetNode').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error adding the edge');
+            });
+        }
+
+        // Eliminar nodo
+        document.getElementById('deleteNodeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const nodeId = document.getElementById('nodeToDelete').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            if (confirm(`Are you sure you want to delete node ${nodeId}? This will also delete all its edges.`)) {
+                // Mostrar loading
+                loadingOverlay.style.display = 'flex';
+
+                fetch('/delete_node', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ node_id: nodeId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        reloadPyvisGraph();
+                        modals.deleteNode.style.display = 'none';
+                        document.getElementById('nodeToDelete').value = '';
+                    } else {
+                        loadingOverlay.style.display = 'none';
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingOverlay.style.display = 'none';
+                    alert('There was an error deleting the node');
+                });
+            }
+        }
+
+        // Eliminar edge
+        document.getElementById('deleteEdgeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const sourceNode = document.getElementById('edgeSource').value;
+            const targetNode = document.getElementById('edgeTarget').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/delete_edge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    source: sourceNode,
+                    target: targetNode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.deleteEdge.style.display = 'none';
+                    document.getElementById('edgeSource').value = '';
+                    document.getElementById('edgeTarget').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error deleting the edge');
+            });
+        }
+
+        // Entrenar red neuronal
+        buttons.train.onclick = function() {
+            if (confirm('Are you ready to train the neural network?')) {
+                // Aquí puedes redirigir a la página de entrenamiento o abrir un modal
+                window.location.href = '/train_network';
+            }
+        }
+    </script>
+</body>
+</html>

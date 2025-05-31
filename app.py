@@ -336,19 +336,11 @@ def set_input_columns():
 def network_design():
     pyvis_graph = PyVisNeuronalNetwork()
     pyvis_graph.generate_HTML(nx_graph)
-    # This would be your next page after input selection
-    print("NODOS: ")
-    print(nx_graph.nxg.nodes())
-    print(pyvis_graph.graph.get_nodes())
-    print("\nAristas")
-    print(nx_graph.nxg.edges())
-    print(pyvis_graph.graph.get_edges())
-
     # Update the PyVis graph
     if 'pyvis_graph' in globals() and pyvis_graph is not None:
         pyvis_graph.actualise_graph(nx_graph)
         pyvis_graph.generate_HTML(nx_graph)
-    return render_template("hola.html", cache_buster=os.urandom(8).hex())
+    return render_template("manage_neuronal_network.html", cache_buster=os.urandom(8).hex())
 
 
 # Función para manejar la solicitud de agregar neuronas
@@ -484,6 +476,158 @@ def process_data_preprocessing():
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+# Add these routes to app.py after the add_neuron route
+
+@app.route('/add_edge', methods=['POST'])
+def add_edge():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    source = int(data.get('source', -1))
+    target = int(data.get('target', -1))
+
+    if source < 0 or target < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node IDs. Source and target must be non-negative.'
+        }), 400
+
+    try:
+        # Check if nodes exist
+        if source not in nx_graph.nxg.nodes():
+            return jsonify({
+                'status': 'error',
+                'message': f'Source node {source} does not exist'
+            }), 400
+
+        if target not in nx_graph.nxg.nodes():
+            return jsonify({
+                'status': 'error',
+                'message': f'Target node {target} does not exist'
+            }), 400
+
+        # Check if edge already exists
+        if nx_graph.nxg.has_edge(source, target):
+            return jsonify({
+                'status': 'error',
+                'message': f'Edge from {source} to {target} already exists'
+            }), 400
+
+        # Add the edge
+        nx_graph.add_edge(source, target)
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Edge added from node {source} to node {target}'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/delete_node', methods=['POST'])
+def delete_node():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    node_id = int(data.get('node_id', -1))
+
+    if node_id < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node ID. Node ID must be non-negative.'
+        }), 400
+
+    try:
+        # Check if it's an input or output node (these shouldn't be deleted)
+        if node_id in nx_graph.inputNeurons:
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot delete input neurons'
+            }), 400
+
+        if node_id in nx_graph.outputNeurons:
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot delete output neurons'
+            }), 400
+
+        # Remove the node (this will also remove all its edges automatically)
+        success = nx_graph.remove_node(node_id)
+
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': f'Node {node_id} does not exist'
+            }), 400
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Node {node_id} and all its edges have been removed'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/delete_edge', methods=['POST'])
+def delete_edge():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    source = int(data.get('source', -1))
+    target = int(data.get('target', -1))
+
+    if source < 0 or target < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node IDs. Source and target must be non-negative.'
+        }), 400
+
+    try:
+        # Remove the edge
+        success = nx_graph.remove_edge(source, target)
+
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': f'Edge from {source} to {target} does not exist'
+            }), 400
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Edge from node {source} to node {target} has been removed'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/train_network')
+def train_network():
+    """Route for the training page (placeholder for now)"""
+    # This is a placeholder - you'll need to create the actual training page
+    return "Training page - To be implemented"
 
 if __name__ == "__main__":
     app.run(debug=True)
