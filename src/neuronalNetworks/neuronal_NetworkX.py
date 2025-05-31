@@ -166,14 +166,10 @@ class NeuronalNetworkX:
                 return fullyConnected
 
     def defaultNetwork(self, hidden_layers, hidden_neurons):
-        print("Default Network Inputs: "+str(self.numInputNeuron)+" Outputs: "+str(self.numOutputNeuron))
         count_inputs=0
         previous_layer=list()
-        for i in range(self.numInputNeuron):  # Capa de entrada
-            count_inputs+=1
-            print("Input: "+str(count_inputs))
-            self.inputNeurons.append(self.nodeID)
-            self.add_node(1,'Input Neuron')
+        self.inputNeurons.append(self.nodeID)
+        self.add_node(self.numInputNeuron, 'Input Neuron')
         for j in range(self.numOutputNeuron):  # Capa de salida
             self.outputNeurons.append(self.nodeID)
             self.add_node(1,'Target Neuron')
