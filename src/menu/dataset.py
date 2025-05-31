@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 class Dataset:
@@ -14,6 +15,8 @@ class Dataset:
         self.df_outputs = self.df
         self.train_size=0.8
         self.random_state=42
+        self.test_size=1-self.train_size
+        self.standarization=''
 
     def input_columns_selection(self):
         seleccion = input("Introduce los números de las columnas que quieres usar como input, separados por comas: ")
@@ -74,3 +77,20 @@ class Dataset:
         df_test_output=df_test[df_test[self.df_outputs]]
         return df_train_input, df_test_input, df_train_output, df_test_output
 
+    def set_train_test_size(self, trainSize):
+        self.train_size=trainSize
+        self.test_size=1-self.train_size
+
+    def set_standarization(self, standarization):
+        self.standarization=standarization
+
+    def cleaning(self,cleaning_option,custom_value):
+        if cleaning_option == 'row-null':
+            self.df.dropna(inplace=True)
+        elif cleaning_option == 'column-null':
+            self.df.dropna(axis=1, inplace=True)
+        elif cleaning_option == 'custom':
+            self.df.replace(custom_value, np.nan, inplace=True)
+            self.df.dropna(inplace=True)
+            # Código alternativo
+            # df.drop(df[df.isin([custom_value]).any(axis=1)].index, inplace=True)
