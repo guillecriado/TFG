@@ -441,9 +441,8 @@ def process_data_preprocessing():
             current_dataset.cleaning(cleaning_option, '')
         # Process standardization model
         standardization_model = data.get('standardization_model', 'none')
-        # Add your standardization logic based on the selected model
         if standardization_model != 'none':
-            current_dataset.set_standardization(standardization_model)
+            current_dataset.set_standarization(standardization_model)
         # Process network configuration
         network_type = data.get('network_type', 'empty')
 
@@ -451,8 +450,6 @@ def process_data_preprocessing():
             # Generate standard network with hidden layers and neurons per layer
             hidden_layers = int(data.get('hidden_layers', 1))
             neurons_per_layer = int(data.get('neurons_per_layer', 5))
-            print("Input: " + str(nx_graph.numInputNeuron))
-            print("Output: " + str(nx_graph.numOutputNeuron))
             nx_graph.defaultNetwork(hidden_layers, neurons_per_layer)
         else:
             nx_graph.defaultNetwork(0, 0)
@@ -620,11 +617,152 @@ def delete_edge():
         }), 500
 
 
-@app.route('/train_network')
+@app.route('/check_network_connectivity', methods=['GET'])
+def check_network_connectivity():
+    """Check if the neural network is fully connected"""
+    global nx_graph
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No neural network has been created yet'
+        }), 400
+
+    try:
+        # Check if network is fully connected
+        is_fully_connected_td = nx_graph.isFullyConnectedTopDown()
+        is_fully_connected_bu = nx_graph.isFullyConnectedBottomUp()
+
+        is_fully_connected = is_fully_connected_td and is_fully_connected_bu
+
+        if is_fully_connected:
+            return jsonify({
+                'status': 'success',
+                'is_fully_connected': True,
+                'message': 'Network is fully connected and ready for training'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'is_fully_connected': False,
+                'message': 'Network is not fully connected. Please ensure all layers are properly connected before training.'
+            })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Error checking network connectivity: {str(e)}'
+        }), 500
+
+
+@app.route('/train_network', methods=['POST'])
 def train_network():
-    """Route for the training page (placeholder for now)"""
-    # This is a placeholder - you'll need to create the actual training page
-    return "Training page - To be implemented"
+    """Train the neural network"""
+    global nx_graph, current_dataset
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No neural network has been created yet'
+        }), 400
+
+    if current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No dataset has been loaded yet'
+        }), 400
+
+    data = request.json
+    num_epochs = int(data.get('epochs', 100))
+
+    try:
+        # First check if network is fully connected
+        is_fully_connected_td = nx_graph.isFullyConnectedTopDown()
+        is_fully_connected_bu = nx_graph.isFullyConnectedBottomUp()
+
+        if not (is_fully_connected_td and is_fully_connected_bu):
+            return jsonify({
+                'status': 'error',
+                'message': 'Network is not fully connected. Cannot train.'
+            }), 400
+
+        # Set the loss function based on problem type
+        problem_type = current_dataset.problem_type()
+        nx_graph.set_loss(problem_type)
+
+        # Parse the network to Keras
+        nx_graph.parseKeras()
+
+        # Divide the dataset
+        df_train_input, df_test_input, df_train_output, df_test_output = current_dataset.divide_data()
+
+        # Train the model
+        nx_graph.train_model(df_train_input, df_train_output, num_epochs)
+
+        # Test the model
+        test_results = nx_graph.test_model(df_test_input, df_test_output)
+
+        # Save the model
+        nx_graph.save_model()
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Model trained successfully for {num_epochs} epochs',
+            'test_loss': float(test_results) if isinstance(test_results, (int, float)) else float(test_results[0]),
+            'model_saved': True,
+            'model_path': nx_graph.keras_path
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Error during training: {str(e)}'
+        }), 500
+
+
+@app.route('/get_training_info', methods=['GET'])
+def get_training_info():
+    """Get information about the dataset and network for training"""
+    global nx_graph, current_dataset
+
+    if nx_graph is None or current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'Network or dataset not properly initialized'
+        }), 400
+
+    try:
+        # Get dataset info
+        num_samples = len(current_dataset.df)
+        num_inputs = len(current_dataset.df_inputs.columns)
+        num_outputs = len(current_dataset.df_outputs.columns)
+        problem_type = current_dataset.problem_type()
+        train_size = int(current_dataset.train_size * 100)
+
+        # Get network info
+        num_nodes = nx_graph.nxg.number_of_nodes()
+        num_edges = nx_graph.nxg.number_of_edges()
+
+        return jsonify({
+            'status': 'success',
+            'dataset_info': {
+                'num_samples': num_samples,
+                'num_inputs': num_inputs,
+                'num_outputs': num_outputs,
+                'problem_type': problem_type,
+                'train_split': train_size,
+                'test_split': 100 - train_size
+            },
+            'network_info': {
+                'num_nodes': num_nodes,
+                'num_edges': num_edges,
+                'num_hidden_layers': num_nodes - num_inputs - num_outputs
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

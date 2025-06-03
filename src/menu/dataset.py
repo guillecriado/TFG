@@ -45,6 +45,8 @@ class Dataset:
         :return: El tipo de problema al que nos enfrentamos.
         """
         type=""
+        print("Valores numéricos?"+str(pd.api.types.is_numeric_dtype(self.df_outputs)))
+        print("Valores únicos: "+str(self.df_outputs.nunique() >= 10))
         if pd.api.types.is_numeric_dtype(self.df_outputs):
             if self.df_outputs.nunique() >= 10:
                 type='REGRESSION'
@@ -71,10 +73,17 @@ class Dataset:
         :return: Los conjuntos completamente divididos para el entrenamiento y test de la red neuronal.
         """
         df_train, df_test = self.__divide_dataset()
-        df_train_input=df_train[df_train[self.df_inputs]]
-        df_test_input=df_test[df_test[self.df_inputs]]
-        df_train_output=df_train[df_train[self.df_outputs]]
-        df_test_output=df_test[df_test[self.df_outputs]]
+
+        # Obtener los nombres de las columnas
+        input_columns = self.df_inputs.columns.tolist()
+        output_columns = self.df_outputs.columns.tolist()
+
+        # Seleccionar las columnas
+        df_train_input = df_train[input_columns]
+        df_test_input = df_test[input_columns]
+        df_train_output = df_train[output_columns]
+        df_test_output = df_test[output_columns]
+
         return df_train_input, df_test_input, df_train_output, df_test_output
 
     def set_train_test_size(self, trainSize):

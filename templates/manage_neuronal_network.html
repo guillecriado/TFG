@@ -110,16 +110,14 @@
         }
 
         .train-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
+            padding: 12px 24px;
             background-color: #333;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            font-size: 16px;
         }
 
         .train-button:hover {
@@ -141,20 +139,43 @@
         }
 
         .progress-bar {
-            height: 4px;
+            height: 8px;
             background-color: #e0e0e0;
             margin-top: 20px;
-            border-radius: 2px;
+            border-radius: 4px;
             overflow: hidden;
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .progress {
             height: 100%;
             background-color: #2196F3;
             width: 80%; /* 4 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
         }
 
         /* Modal styles */
@@ -167,16 +188,26 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0,0,0,0.4);
+            overflow: auto;
+        }
+
+        .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal-content {
             background-color: white;
-            margin: 15% auto;
-            padding: 30px;
+            padding: 40px;
             border: 1px solid #888;
-            width: 350px;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -279,7 +310,10 @@
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="loading-spinner"></div>
             </div>
-            <button class="train-button" id="trainNetworkBtn">Train Neuronal Network</button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="action-button" id="trainNetworkBtn" style="background-color: #333; color: white; border: none; padding: 12px 24px;">Train Neuronal Network</button>
         </div>
 
         <div class="footer">
@@ -287,8 +321,10 @@
         </div>
     </div>
 
-    <div class="progress-bar">
-        <div class="progress"></div>
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
     </div>
 
     <!-- Modal para añadir neuronas -->
@@ -370,6 +406,39 @@
         </div>
     </div>
 
+    <!-- Modal para entrenamiento -->
+    <div id="trainingModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title" style="font-size: 24px; margin-bottom: 20px;">Train Neural Network</div>
+            </div>
+            <div id="trainingInfo" style="margin-bottom: 30px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #333;">Network Information</h3>
+                <div id="networkInfoContent" style="font-size: 16px; color: #555; line-height: 1.8;">
+                    Loading network information...
+                </div>
+            </div>
+            <form id="trainingForm" style="margin-top: 30px;">
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label for="epochs" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 10px; display: block;">Number of epochs:</label>
+                    <input type="number" id="epochs" name="epochs" min="1" max="10000" value="100" required style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 20px; padding: 15px 30px; font-size: 18px; width: 100%;">Start Training</button>
+            </form>
+            <div id="trainingProgress" style="display: none; margin-top: 30px;">
+                <div style="text-align: center;">
+                    <div class="loading-spinner" style="margin: 0 auto; width: 50px; height: 50px;"></div>
+                    <p style="margin-top: 15px; color: #666; font-size: 16px;">Training in progress...</p>
+                </div>
+            </div>
+            <div id="trainingResults" style="display: none; margin-top: 30px; padding: 20px; background-color: #f0f8ff; border-radius: 5px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #333;">Training Results</h3>
+                <div id="resultsContent" style="font-size: 16px; line-height: 1.8; color: #555;"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Función para recargar el iframe de PyVis
         function reloadPyvisGraph() {
@@ -401,7 +470,8 @@
             neuron: document.getElementById('neuronModal'),
             edge: document.getElementById('edgeModal'),
             deleteNode: document.getElementById('deleteNodeModal'),
-            deleteEdge: document.getElementById('deleteEdgeModal')
+            deleteEdge: document.getElementById('deleteEdgeModal'),
+            training: document.getElementById('trainingModal')
         };
 
         const buttons = {
@@ -413,22 +483,30 @@
         };
 
         // Abrir modales
-        buttons.neuron.onclick = () => modals.neuron.style.display = 'block';
-        buttons.edge.onclick = () => modals.edge.style.display = 'block';
-        buttons.deleteNode.onclick = () => modals.deleteNode.style.display = 'block';
-        buttons.deleteEdge.onclick = () => modals.deleteEdge.style.display = 'block';
+        buttons.neuron.onclick = () => {
+            modals.neuron.classList.add('show');
+        };
+        buttons.edge.onclick = () => {
+            modals.edge.classList.add('show');
+        };
+        buttons.deleteNode.onclick = () => {
+            modals.deleteNode.classList.add('show');
+        };
+        buttons.deleteEdge.onclick = () => {
+            modals.deleteEdge.classList.add('show');
+        };
 
         // Cerrar modales
         document.querySelectorAll('.close').forEach(closeBtn => {
             closeBtn.onclick = function() {
-                this.closest('.modal').style.display = 'none';
+                this.closest('.modal').classList.remove('show');
             }
         });
 
         // Cerrar modal al hacer clic fuera
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+                event.target.classList.remove('show');
             }
         }
 
@@ -452,7 +530,7 @@
             .then(data => {
                 if (data.status === 'success') {
                     reloadPyvisGraph();
-                    modals.neuron.style.display = 'none';
+                    modals.neuron.classList.remove('show');
                     document.getElementById('neuronCount').value = '';
                 } else {
                     loadingOverlay.style.display = 'none';
@@ -490,7 +568,7 @@
             .then(data => {
                 if (data.status === 'success') {
                     reloadPyvisGraph();
-                    modals.edge.style.display = 'none';
+                    modals.edge.classList.remove('show');
                     document.getElementById('sourceNode').value = '';
                     document.getElementById('targetNode').value = '';
                 } else {
@@ -526,7 +604,7 @@
                 .then(data => {
                     if (data.status === 'success') {
                         reloadPyvisGraph();
-                        modals.deleteNode.style.display = 'none';
+                        modals.deleteNode.classList.remove('show');
                         document.getElementById('nodeToDelete').value = '';
                     } else {
                         loadingOverlay.style.display = 'none';
@@ -565,7 +643,7 @@
             .then(data => {
                 if (data.status === 'success') {
                     reloadPyvisGraph();
-                    modals.deleteEdge.style.display = 'none';
+                    modals.deleteEdge.classList.remove('show');
                     document.getElementById('edgeSource').value = '';
                     document.getElementById('edgeTarget').value = '';
                 } else {
@@ -582,10 +660,114 @@
 
         // Entrenar red neuronal
         buttons.train.onclick = function() {
-            if (confirm('Are you ready to train the neural network?')) {
-                // Aquí puedes redirigir a la página de entrenamiento o abrir un modal
-                window.location.href = '/train_network';
-            }
+            // First check if network is fully connected
+            fetch('/check_network_connectivity')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.is_fully_connected) {
+                        // Network is fully connected, show training modal
+                        loadTrainingInfo();
+                        modals.training.classList.add('show');
+                    } else {
+                        // Network is not fully connected
+                        alert(data.message || 'Network is not fully connected. Please ensure all layers are properly connected before training.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error checking network connectivity');
+                });
+        }
+
+        // Load training information
+        function loadTrainingInfo() {
+            fetch('/get_training_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const infoContent = document.getElementById('networkInfoContent');
+                        const dataset = data.dataset_info;
+                        const network = data.network_info;
+
+                        infoContent.innerHTML = `
+                            <strong>Dataset:</strong><br>
+                            • Samples: ${dataset.num_samples}<br>
+                            • Inputs: ${dataset.num_inputs}<br>
+                            • Outputs: ${dataset.num_outputs}<br>
+                            • Problem type: ${dataset.problem_type}<br>
+                            • Train/Test split: ${dataset.train_split}%/${dataset.test_split}%<br><br>
+                            <strong>Network:</strong><br>
+                            • Total nodes: ${network.num_nodes}<br>
+                            • Total edges: ${network.num_edges}<br>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('networkInfoContent').innerHTML = 'Error loading network information';
+                });
+        }
+
+        // Handle training form submission
+        document.getElementById('trainingForm').onsubmit = function(e) {
+            e.preventDefault();
+
+            const epochs = document.getElementById('epochs').value;
+            const trainingForm = document.getElementById('trainingForm');
+            const trainingProgress = document.getElementById('trainingProgress');
+            const trainingResults = document.getElementById('trainingResults');
+            const resultsContent = document.getElementById('resultsContent');
+
+            // Hide form and results, show progress
+            trainingForm.style.display = 'none';
+            trainingResults.style.display = 'none';
+            trainingProgress.style.display = 'block';
+
+            // Start training
+            fetch('/train_network', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ epochs: epochs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide progress
+                trainingProgress.style.display = 'none';
+
+                if (data.status === 'success') {
+                    // Show results
+                    trainingResults.style.display = 'block';
+                    resultsContent.innerHTML = `
+                        <strong style="color: green;">✓ Training completed successfully!</strong><br><br>
+                        • Epochs: ${epochs}<br>
+                        • Test loss: ${data.test_loss.toFixed(4)}<br>
+                        • Model saved: ${data.model_saved ? 'Yes' : 'No'}<br>
+                        • Model path: ${data.model_path || 'N/A'}<br><br>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="submit-btn" style="flex: 1;" onclick="document.getElementById('trainingModal').classList.remove('show'); window.location.reload();">Close & Refresh</button>
+                            <button class="submit-btn" style="flex: 1; background-color: #ffffff;" onclick="window.location.href='/results';">Go to Results</button>
+                        </div>
+                    `;
+                } else {
+                    // Show error
+                    trainingResults.style.display = 'block';
+                    resultsContent.innerHTML = `
+                        <strong style="color: red;">✗ Training failed</strong><br><br>
+                        Error: ${data.message}<br><br>
+                        <button class="submit-btn" onclick="document.getElementById('trainingModal').classList.remove('show');">Close</button>
+                    `;
+                    // Show form again
+                    trainingForm.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                trainingProgress.style.display = 'none';
+                trainingForm.style.display = 'block';
+                alert('There was an error during training: ' + error);
+            });
         }
     </script>
 </body>

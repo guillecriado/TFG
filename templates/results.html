@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .content-wrapper {
+            display: flex;
+            gap: 40px;
+            flex: 1;
+        }
+
+        .metrics-section {
+            flex: 1;
+            background-color: #fafafa;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .predict-section {
+            flex: 1;
+            background-color: #fafafa;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        /* Metrics styles */
+        .metric-item {
+            margin-bottom: 40px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .metric-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .metric-range {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .metric-bar-container {
+            position: relative;
+            height: 30px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .metric-bar {
+            height: 100%;
+            background-color: #333;
+            border-radius: 15px;
+            position: relative;
+            transition: width 0.3s ease;
+        }
+
+        .metric-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .metric-description {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        /* Predict section styles */
+        .predict-input-container {
+            margin-bottom: 20px;
+        }
+
+        .predict-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .predict-input:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .predict-btn:hover {
+            background-color: #000;
+        }
+
+        .predict-result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        .predict-result.show {
+            display: block;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Footer styles */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn {
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+        }
+
+        .save-btn:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .evaluate-btn {
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+        }
+
+        .evaluate-btn:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .new-network-btn {
+            background-color: #333;
+            color: white;
+        }
+
+        .new-network-btn:hover {
+            background-color: #000;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 100%;
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            overflow: auto;
+        }
+
+        .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+            margin-top: -10px;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .modal-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-button:hover {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RESULTS</h1>
+
+        <div class="content-wrapper">
+            <!-- Metrics Section -->
+            <div class="metrics-section">
+                <div class="section-title">Metrics</div>
+                <div class="section-description">Metrics to evaluate the neural network.</div>
+
+                <div id="metrics-container">
+                    <!-- Metrics will be dynamically generated here -->
+                </div>
+            </div>
+
+            <!-- Predict Section -->
+            <div class="predict-section">
+                <div class="section-title">Predict</div>
+                <div class="section-description">Given a value, the outcome value will be predicted.</div>
+
+                <div class="predict-input-container" id="predict-inputs">
+                    <!-- Input fields will be dynamically generated here -->
+                </div>
+
+                <button class="predict-btn" onclick="makePrediction()">Predict</button>
+
+                <div class="predict-result" id="predict-result">
+                    <div class="result-label">Predicted Value:</div>
+                    <div class="result-value" id="result-value">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Paso 5 de 5</div>
+            <div class="action-buttons">
+                <button class="action-btn save-btn" onclick="saveModel()">Save model</button>
+                <button class="action-btn evaluate-btn" onclick="evaluateModel()">Evaluate model</button>
+                <button class="action-btn new-network-btn" onclick="createNewNetwork()">New neuronal network</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Success!</div>
+            </div>
+            <div class="modal-message" id="modalMessage">
+                Operation completed successfully.
+            </div>
+            <button class="modal-button" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let inputColumns = [];
+        let outputColumns = [];
+        let problemType = '';
+
+        // Load initial data when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            loadResultsData();
+        });
+
+        function loadResultsData() {
+            fetch('/get_results_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        inputColumns = data.input_columns;
+                        outputColumns = data.output_columns;
+                        problemType = data.problem_type;
+
+                        generateMetrics(data.metrics, problemType);
+                        generatePredictInputs();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error loading the results data');
+                });
+        }
+
+        function generateMetrics(metrics, problemType) {
+            const container = document.getElementById('metrics-container');
+            container.innerHTML = '';
+
+            let metricsToShow = [];
+
+            if (problemType === 'REGRESSION') {
+                metricsToShow = [
+                    {
+                        name: 'MAE',
+                        description: 'Mean Absolute Error - Average of absolute differences between predicted and actual values.',
+                        value: metrics.mae || 0,
+                        range: [0, 100],
+                        displayValue: (metrics.mae || 0).toFixed(4)
+                    },
+                    {
+                        name: 'RMSE',
+                        description: 'Root Mean Square Error - Square root of average squared differences.',
+                        value: metrics.rmse || 0,
+                        range: [0, 100],
+                        displayValue: (metrics.rmse || 0).toFixed(4)
+                    },
+                    {
+                        name: 'MSE',
+                        description: 'Mean Squared Error - Average of squared differences between predicted and actual values.',
+                        value: metrics.mse || 0,
+                        range: [0, 100],
+                        displayValue: (metrics.mse || 0).toFixed(4)
+                    }
+                ];
+            } else {
+                // Classification metrics
+                metricsToShow = [
+                    {
+                        name: 'Accuracy',
+                        description: 'Is the proportion of all classifications that were correct, whether positive or negative.',
+                        value: metrics.accuracy || 0,
+                        range: [0, 1],
+                        displayValue: ((metrics.accuracy || 0) * 100).toFixed(2) + '%'
+                    },
+                    {
+                        name: 'Recall',
+                        description: 'Proportion of actual positives that were correctly identified by the model.',
+                        value: metrics.recall || 0,
+                        range: [0, 1],
+                        displayValue: ((metrics.recall || 0) * 100).toFixed(2) + '%'
+                    },
+                    {
+                        name: 'F1 Score',
+                        description: 'Harmonic mean of precision and recall, providing balanced measure.',
+                        value: metrics.f1_score || 0,
+                        range: [0, 1],
+                        displayValue: ((metrics.f1_score || 0) * 100).toFixed(2) + '%'
+                    }
+                ];
+            }
+
+            metricsToShow.forEach(metric => {
+                const metricElement = createMetricElement(metric);
+                container.appendChild(metricElement);
+            });
+        }
+
+        function createMetricElement(metric) {
+            const div = document.createElement('div');
+            div.className = 'metric-item';
+
+            const percentage = ((metric.value - metric.range[0]) / (metric.range[1] - metric.range[0])) * 100;
+
+            div.innerHTML = `
+                <div class="metric-header">
+                    <div class="metric-name">${metric.name}</div>
+                </div>
+                <div class="metric-range">
+                    <span>${metric.range[0]}</span>
+                    <span>${metric.range[1]}</span>
+                </div>
+                <div class="metric-bar-container">
+                    <div class="metric-bar" style="width: ${Math.min(100, Math.max(0, percentage))}%">
+                        <div class="metric-value">${metric.displayValue}</div>
+                    </div>
+                </div>
+                <div class="metric-description">${metric.description}</div>
+            `;
+
+            return div;
+        }
+
+        function generatePredictInputs() {
+            const container = document.getElementById('predict-inputs');
+            container.innerHTML = '';
+
+            inputColumns.forEach(column => {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any';
+                input.className = 'predict-input';
+                input.placeholder = `Enter ${column}`;
+                input.dataset.column = column;
+                container.appendChild(input);
+            });
+        }
+
+        function makePrediction() {
+            const inputs = document.querySelectorAll('.predict-input');
+            const inputData = {};
+            let hasAllInputs = true;
+
+            inputs.forEach(input => {
+                const value = parseFloat(input.value);
+                if (isNaN(value)) {
+                    hasAllInputs = false;
+                    return;
+                }
+                inputData[input.dataset.column] = value;
+            });
+
+            if (!hasAllInputs) {
+                alert('Please fill in all input values');
+                return;
+            }
+
+            // Convert to array in correct order
+            const inputArray = inputColumns.map(col => inputData[col]);
+
+            fetch('/make_predictions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ input_data: [inputArray] })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const resultDiv = document.getElementById('predict-result');
+                    const resultValue = document.getElementById('result-value');
+
+                    // Show the first output value
+                    resultValue.textContent = data.predictions[0][0].toFixed(4);
+                    resultDiv.classList.add('show');
+                } else {
+                    alert('Error making prediction: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error making the prediction');
+            });
+        }
+
+        function saveModel() {
+            fetch('/save_model_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showModal('Model saved successfully!');
+                } else {
+                    alert('Error saving model: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error saving the model');
+            });
+        }
+
+        function evaluateModel() {
+            fetch('/evaluate_model_action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showModal('Model evaluation completed successfully!');
+                    // Reload metrics with new evaluation data
+                    if (data.evaluation) {
+                        generateMetrics(data.evaluation, problemType);
+                    }
+                } else {
+                    alert('Error evaluating model: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error evaluating the model');
+            });
+        }
+
+        function createNewNetwork() {
+            if (confirm('Are you sure you want to create a new neural network? This will reset all current progress.')) {
+                window.location.href = '/';
+            }
+        }
+
+        function showModal(message) {
+            const modal = document.getElementById('successModal');
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+        }
+
+        // Modal close functionality
+        document.querySelector('.close').onclick = function() {
+            closeModal();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('successModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
