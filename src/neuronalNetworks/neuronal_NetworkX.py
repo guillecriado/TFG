@@ -83,19 +83,8 @@ class NeuronalNetworkX:
     def isFullyConnectedTopDown(self):
         nxg_aux=self.nxg.copy()
         fullyConnected = True
-        index=1
         layer_list = list(nxg_aux.successors(0))
-        print("Sucesores del nodo 0: "+str(layer_list))
         size_next_layer=len(layer_list)
-        print("Size de la siguiente capa: "+str(size_next_layer))
-        while index<self.numInputNeuron and fullyConnected==True:
-            print("Index: "+str(index)+ "NumInputNeuron: "+str(self.numInputNeuron))
-            aux_list=list(nxg_aux.successors(index))
-            print("Sucesores del nodo "+str(index)+ ": " + str(aux_list))
-            if set(layer_list)==set(aux_list):
-                index+=1
-            else:
-                fullyConnected=False
         if not fullyConnected:
             return fullyConnected
         else:
@@ -107,13 +96,10 @@ class NeuronalNetworkX:
     def __isFullyConnectedTopDownAux(self,nxg_aux,size,layer_list):
         fullyConnected=True
         next_layer_list=list(nxg_aux.successors(layer_list[0]))
-        print("Sucesores del nodo " + str(layer_list[0]) + ": " + str(next_layer_list))
         i=1
         while i<size and fullyConnected==True:
-            print("I: " + str(i) + " Size: " + str(size))
             x=layer_list[i]
             aux_list=list(nxg_aux.successors(x))
-            print("Sucesores del nodo " + str(x) + ": " + str(aux_list))
             if set(next_layer_list)==set(aux_list):
                 i+=1
             else:
@@ -129,15 +115,8 @@ class NeuronalNetworkX:
     def isFullyConnectedBottomUp(self):
         nxg_aux = self.nxg.copy()
         fullyConnected = True
-        index = self.numInputNeuron+1
-        layer_list = list(nxg_aux.predecessors(self.numInputNeuron))
+        layer_list = list(nxg_aux.predecessors(1))
         size_next_layer = len(layer_list)
-        while index < self.numOutputNeuron and fullyConnected == True:
-            aux_list = list(nxg_aux.predecessors(index))
-            if set(layer_list) == set(aux_list):
-                index += 1
-            else:
-                fullyConnected = False
         if not fullyConnected:
             return fullyConnected
         else:
@@ -216,7 +195,7 @@ class NeuronalNetworkX:
         :return: void.
         """
         size_actual_later=self.__get_neurons_of_layer(layer, nxg_aux)
-        next_layer=list(nxg_aux.sucessors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
+        next_layer=list(nxg_aux.successors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
         size_next_layer=len(next_layer)
         if size_next_layer >0 : # There is more than 1 hidden layer
             self.model.add(Dense(size_actual_later,activation='relu'))

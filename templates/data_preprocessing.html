@@ -219,17 +219,34 @@
         }
 
         .progress-bar {
-            height: 4px;
-            background-color: #eee;
+            height: 8px;
+            background-color: #e0e0e0;
             margin-top: 20px;
-            border-radius: 2px;
+            border-radius: 4px;
             overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .progress {
             height: 100%;
             background-color: #2196F3;
-            width: 80%; /* Step 4 of 5 */
+            width: 60%; /* 3 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
         }
 
         /* Modal styles */
@@ -344,331 +361,14 @@
         </div>
 
         <div class="footer">
-            <div class="page-indicator">Page 4 of 5</div>
+            <div class="page-indicator">Page 3 of 5</div>
             <div class="buttons-container">
                 <button class="button secondary" id="generate-empty-network">Generate empty network</button>
                 <button class="button" id="generate-standard-network">Generate standard network</button>
             </div>
         </div>
 
-        <div class="progress-bar">
-            <div class="progress"></div>
-        </div>
-    </div>
-
-    <!-- Quantities Selection Modal -->
-    <div class="modal" id="quantities-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Quantities Selection</div>
-            </div>
-            <div class="modal-body">
-                <div class="input-field-container">
-                    <input type="number" min="1" class="input-field" id="hidden-layers" placeholder="Nº hidden layers">
-                    <button class="input-field-icon" title="Number of hidden layers">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                        </svg>
-                    </button>
-                </div>
-                <div class="input-field-container">
-                    <input type="number" min="1" class="input-field" id="neurons-per-layer" placeholder="Nº hidden neurons per layer">
-                    <button class="input-field-icon" title="Number of neurons per layer">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="16"></line>
-                            <line x1="8" y1="12" x2="16" y2="12"></line>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="button" id="confirm-quantities">Generate standard network</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Function to populate standardization options based on problem type
-        function populateStandardizationOptions(problemType) {
-            const dropdown = document.getElementById('standardization-model');
-
-            // Clear existing options except "None"
-            while (dropdown.options.length > 1) {
-                dropdown.options.remove(1);
-            }
-
-            // Add options based on problem type
-            let options = [];
-
-            if (problemType === 'REGRESSION') {
-                options = [
-                    'StandardScaler',
-                    'MinMaxScaler',
-                    'PowerTransformer',
-                    'zscore',
-                    'add_constant'
-                ];
-            } else if (problemType === 'BINARY CLASSIFICATION') {
-                options = [
-                    'StandardScaler',
-                    'Binarizer',
-                    'LabelEncoder',
-                    'compute_class_weight'
-                ];
-            } else if (problemType === 'CLASSIFICATION') {
-                options = [
-                    'OneHotEncoder',
-                    'LabelEncoder',
-                    'RobustScaler',
-                    'SMOTE',
-                    'PCA'
-                ];
-            }
-
-            // Add options to dropdown
-            options.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option.toLowerCase().replace(/[_\s]/g, '');
-                opt.textContent = option;
-                dropdown.appendChild(opt);
-            });
-        }
-
-        // Handle cleaning option checkboxes (only one can be selected)
-        const cleaningCheckboxes = document.querySelectorAll('.cleaning-checkbox');
-        cleaningCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    // Uncheck all other checkboxes
-                    cleaningCheckboxes.forEach(cb => {
-                        if (cb !== this) {
-                            cb.checked = false;
-                        }
-                    });
-
-                    // Show custom value input if "Customised cleaning" is selected
-                    document.getElementById('custom-value-container').style.display =
-                        this.value === 'custom' ? 'block' : 'none';
-                } else {
-                    // Hide custom value input if "Customised cleaning" is unchecked
-                    if (this.value === 'custom') {
-                        document.getElementById('custom-value-container').style.display = 'none';
-                    }
-                }
-            });
-        });
-
-        // Update train/test split value display
-        const splitSlider = document.getElementById('train-test-split');
-        const splitValue = document.getElementById('split-value');
-
-        splitSlider.addEventListener('input', function() {
-            splitValue.textContent = this.value;
-        });
-
-        // Generate empty network button click
-        document.getElementById('generate-empty-network').addEventListener('click', function() {
-            sendNetworkConfiguration('empty');
-        });
-
-        // Generate standard network button click
-        document.getElementById('generate-standard-network').addEventListener('click', function() {
-            document.getElementById('quantities-modal').style.display = 'flex';
-        });
-
-        // Confirm quantities button click
-        document.getElementById('confirm-quantities').addEventListener('click', function() {
-            const hiddenLayers = document.getElementById('hidden-layers').value;
-            const neuronsPerLayer = document.getElementById('neurons-per-layer').value;
-
-            if (!hiddenLayers || !neuronsPerLayer) {
-                alert('Please enter values for both fields');
-                return;
-            }
-
-            document.getElementById('quantities-modal').style.display = 'none';
-            sendNetworkConfiguration('standard', hiddenLayers, neuronsPerLayer);
-        });
-
-        // Function to send configuration to server
-        function sendNetworkConfiguration(type, hiddenLayers = null, neuronsPerLayer = null) {
-            // Get selected cleaning option
-            let cleaningOption = '';
-            cleaningCheckboxes.forEach(cb => {
-                if (cb.checked) {
-                    cleaningOption = cb.value;
-                }
-            });
-
-            // Get custom value if customized cleaning selected
-            let customValue = null;
-            if (cleaningOption === 'custom') {
-                customValue = document.getElementById('custom-value').value;
-                if (customValue.trim() === '' && cleaningOption === 'custom') {
-                    alert('Please enter a custom value for customized cleaning');
-                    return;
-                }
-            }
-
-            // Get standardization model
-            const standardizationModel = document.getElementById('standardization-model').value;
-
-            // Get train/test split
-            const trainTestSplit = document.getElementById('train-test-split').value;
-
-            // Create data object
-            const data = {
-                cleaning_option: cleaningOption,
-                custom_value: customValue,
-                standardization_model: standardizationModel,
-                train_test_split: trainTestSplit,
-                network_type: type
-            };
-
-            // Add network parameters if standard network
-            if (type === 'standard') {
-                data.hidden_layers = hiddenLayers;
-                data.neurons_per_layer = neuronsPerLayer;
-            }
-
-            // Send data to server
-            fetch('/process_data_preprocessing', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.href = data.redirect;
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('There was an error processing your request');
-            });
-        }
-
-        // Close modal if clicked outside
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('quantities-modal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-
-        // Fetch problem type from server and populate dropdown
-        function fetchProblemType() {
-            fetch('/get_problem_type')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        populateStandardizationOptions(data.problem_type);
-                    } else {
-                        console.error('Error:', data.message);
-                        // Default to regression if error
-                        populateStandardizationOptions('REGRESSION');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching problem type:', error);
-                    // Default to regression if fetch fails
-                    populateStandardizationOptions('REGRESSION');
-                });
-        }
-
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchProblemType();
-
-            // Set default train/test split value
-            document.getElementById('split-value').textContent = splitSlider.value;
-        });
-    </script>
-</body>
-</html>
-    <div class="container">
-        <h1>Data Preprocessing</h1>
-
-        <div class="content-grid">
-            <!-- Data Cleaning Section -->
-            <div class="section">
-                <div class="section-title">Data cleaning</div>
-                <div class="section-description">Null value cleaning per row, per column and custom value cleaning</div>
-
-                <div class="option-group">
-                    <label class="option-label">
-                        <input type="checkbox" name="cleaning-option" value="row-null" class="cleaning-checkbox">
-                        Cleaning rows with null values
-                    </label>
-
-                    <label class="option-label">
-                        <input type="checkbox" name="cleaning-option" value="column-null" class="cleaning-checkbox">
-                        Cleaning columns with null values
-                    </label>
-
-                    <label class="option-label">
-                        <input type="checkbox" name="cleaning-option" value="custom" class="cleaning-checkbox">
-                        Customised cleaning
-                    </label>
-
-                    <div class="custom-value-input" id="custom-value-container" style="display: none;">
-                        <div class="input-field-container">
-                            <input type="text" class="input-field" id="custom-value" placeholder="Value">
-                            <button class="input-field-icon" title="Add custom value">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Standardization Section -->
-            <div class="section">
-                <div class="section-title">Standardization</div>
-                <div class="section-description">Standardisation of the data depending on the type of problem chosen, different options can be chosen.</div>
-
-                <div class="option-group">
-                    <div>
-                        <label class="model-label">Standardization model</label>
-                        <select class="dropdown-field" id="standardization-model">
-                            <option value="none">None</option>
-                            <!-- Options will be populated based on problem type -->
-                        </select>
-                    </div>
-
-                    <div class="slider-container">
-                        <label class="slider-label">Train/test split</label>
-                        <input type="range" min="0" max="100" value="80" class="slider" id="train-test-split">
-                        <div class="slider-range">
-                            <span>0</span>
-                            <span>100</span>
-                        </div>
-                        <div class="slider-value" id="split-value">80</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <div class="page-indicator">Page 4 of 5</div>
-            <div class="buttons-container">
-                <button class="button secondary" id="generate-empty-network">Generate empty network</button>
-                <button class="button" id="generate-standard-network">Generate standard network</button>
-            </div>
-        </div>
-
+        <div style="background-color: #ffffff; padding: 20px 0; margin-top: -20px;">
         <div class="progress-bar">
             <div class="progress"></div>
         </div>

@@ -28,22 +28,19 @@ global nx_graph
 global pyvis_graph
 global current_dataset
 
+nx_graph = None
+pyvis_graph = None
+current_dataset = None
+
 
 # Inicializar la red neuronal si no existe
 def initialize_networks():
     global nx_graph, pyvis_graph
-    # Comprobar si la red ya ha sido inicializada
-    if 'nx_graph' not in globals() or nx_graph is None:
-        # Valores predeterminados para la red - ajústalos según tus necesidades
-        num_inputs = 3
-        num_outputs = 1
-        #nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
-        #nx_graph.defaultNetwork(1,6)  # Inicializa con la red por defecto
-    # Inicializar o actualizar la red PyVis
-    if 'pyvis_graph' not in globals() or pyvis_graph is None:
+    if pyvis_graph is None:
         pyvis_graph = PyVisNeuronalNetwork()
-    pyvis_graph.actualise_graph(nx_graph)
-    pyvis_graph.generate_HTML(nx_graph)
+    if nx_graph is not None:
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
 
 
 
@@ -334,22 +331,18 @@ def set_input_columns():
 
 @app.route('/network_design')
 def network_design():
-    pyvis_graph = PyVisNeuronalNetwork()
-    pyvis_graph.generate_HTML(nx_graph)
-    # This would be your next page after input selection
-    print("NODOS: ")
-    print(nx_graph.nxg.nodes())
-    print(pyvis_graph.graph.get_nodes())
-    print("\nAristas")
-    print(nx_graph.nxg.edges())
-    print(pyvis_graph.graph.get_edges())
+    global nx_graph, pyvis_graph
 
-    # Update the PyVis graph
-    if 'pyvis_graph' in globals() and pyvis_graph is not None:
+    # Initialize pyvis_graph if it doesn't exist
+    if pyvis_graph is None:
+        pyvis_graph = PyVisNeuronalNetwork()
+
+    # Generate HTML if nx_graph exists
+    if nx_graph is not None:
         pyvis_graph.actualise_graph(nx_graph)
         pyvis_graph.generate_HTML(nx_graph)
-    return render_template("hola.html", cache_buster=os.urandom(8).hex())
 
+    return render_template("manage_neuronal_network.html", cache_buster=os.urandom(8).hex())
 
 # Función para manejar la solicitud de agregar neuronas
 @app.route('/add_neuron', methods=['POST'])
@@ -422,7 +415,7 @@ def get_problem_type():
 
 @app.route('/process_data_preprocessing', methods=['POST'])
 def process_data_preprocessing():
-    global current_dataset
+    global current_dataset, nx_graph, pyvis_graph  # Add pyvis_graph to globals
 
     if current_dataset is None:
         return jsonify({
@@ -440,17 +433,16 @@ def process_data_preprocessing():
         # Process cleaning options here
         cleaning_option = data.get('cleaning_option', '')
         if cleaning_option == '':
-            current_dataset.cleaning(None,'')
+            current_dataset.cleaning(None, '')
         elif cleaning_option == 'custom':
             custom_value = data.get('custom_value', '')
-            current_dataset.cleaning(cleaning_option,custom_value)
+            current_dataset.cleaning(cleaning_option, custom_value)
         else:
-            current_dataset.cleaning(cleaning_option,'')
+            current_dataset.cleaning(cleaning_option, '')
         # Process standardization model
         standardization_model = data.get('standardization_model', 'none')
-        # Add your standardization logic based on the selected model
         if standardization_model != 'none':
-            current_dataset.set_standardization(standardization_model)
+            current_dataset.set_standarization(standardization_model)
         # Process network configuration
         network_type = data.get('network_type', 'empty')
 
@@ -458,19 +450,15 @@ def process_data_preprocessing():
             # Generate standard network with hidden layers and neurons per layer
             hidden_layers = int(data.get('hidden_layers', 1))
             neurons_per_layer = int(data.get('neurons_per_layer', 5))
-            print("Input: "+str(nx_graph.numInputNeuron))
-            print("Output: "+str(nx_graph.numOutputNeuron))
-            nx_graph.defaultNetwork(hidden_layers,neurons_per_layer)
-            # TODO Initialize your network with these parameters
-            # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
-            # nx_graph.create_standard_network(hidden_layers, neurons_per_layer)
+            nx_graph.defaultNetwork(hidden_layers, neurons_per_layer)
         else:
-            nx_graph.defaultNetwork(0,0)
-            # TODO Initialize an empty network
-            # e.g., nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
-            # Update the PyVis graph
+            nx_graph.defaultNetwork(0, 0)
 
-        pyvis_graph = PyVisNeuronalNetwork()
+        # Initialize pyvis_graph if it doesn't exist
+        if pyvis_graph is None:
+            pyvis_graph = PyVisNeuronalNetwork()
+
+        pyvis_graph.actualise_graph(nx_graph)
         pyvis_graph.generate_HTML(nx_graph)
 
         # Redirect to the network design page
@@ -478,6 +466,297 @@ def process_data_preprocessing():
             'status': 'success',
             'message': 'Data preprocessing settings applied successfully',
             'redirect': url_for('network_design')
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/add_edge', methods=['POST'])
+def add_edge():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    source = int(data.get('source', -1))
+    target = int(data.get('target', -1))
+
+    if source < 0 or target < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node IDs. Source and target must be non-negative.'
+        }), 400
+
+    try:
+        # Check if nodes exist
+        if source not in nx_graph.nxg.nodes():
+            return jsonify({
+                'status': 'error',
+                'message': f'Source node {source} does not exist'
+            }), 400
+
+        if target not in nx_graph.nxg.nodes():
+            return jsonify({
+                'status': 'error',
+                'message': f'Target node {target} does not exist'
+            }), 400
+
+        # Check if edge already exists
+        if nx_graph.nxg.has_edge(source, target):
+            return jsonify({
+                'status': 'error',
+                'message': f'Edge from {source} to {target} already exists'
+            }), 400
+
+        # Add the edge
+        nx_graph.add_edge(source, target)
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Edge added from node {source} to node {target}'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/delete_node', methods=['POST'])
+def delete_node():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    node_id = int(data.get('node_id', -1))
+
+    if node_id < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node ID. Node ID must be non-negative.'
+        }), 400
+
+    try:
+        # Check if it's an input or output node (these shouldn't be deleted)
+        if node_id in nx_graph.inputNeurons:
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot delete input neurons'
+            }), 400
+
+        if node_id in nx_graph.outputNeurons:
+            return jsonify({
+                'status': 'error',
+                'message': 'Cannot delete output neurons'
+            }), 400
+
+        # Remove the node (this will also remove all its edges automatically)
+        success = nx_graph.remove_node(node_id)
+
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': f'Node {node_id} does not exist'
+            }), 400
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Node {node_id} and all its edges have been removed'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/delete_edge', methods=['POST'])
+def delete_edge():
+    global nx_graph, pyvis_graph
+
+    data = request.json
+    source = int(data.get('source', -1))
+    target = int(data.get('target', -1))
+
+    if source < 0 or target < 0:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid node IDs. Source and target must be non-negative.'
+        }), 400
+
+    try:
+        # Remove the edge
+        success = nx_graph.remove_edge(source, target)
+
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': f'Edge from {source} to {target} does not exist'
+            }), 400
+
+        # Update and generate the PyVis graph
+        pyvis_graph.actualise_graph(nx_graph)
+        pyvis_graph.generate_HTML(nx_graph)
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Edge from node {source} to node {target} has been removed'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/check_network_connectivity', methods=['GET'])
+def check_network_connectivity():
+    """Check if the neural network is fully connected"""
+    global nx_graph
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No neural network has been created yet'
+        }), 400
+
+    try:
+        # Check if network is fully connected
+        is_fully_connected_td = nx_graph.isFullyConnectedTopDown()
+        is_fully_connected_bu = nx_graph.isFullyConnectedBottomUp()
+
+        is_fully_connected = is_fully_connected_td and is_fully_connected_bu
+
+        if is_fully_connected:
+            return jsonify({
+                'status': 'success',
+                'is_fully_connected': True,
+                'message': 'Network is fully connected and ready for training'
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'is_fully_connected': False,
+                'message': 'Network is not fully connected. Please ensure all layers are properly connected before training.'
+            })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Error checking network connectivity: {str(e)}'
+        }), 500
+
+
+@app.route('/train_network', methods=['POST'])
+def train_network():
+    """Train the neural network"""
+    global nx_graph, current_dataset
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No neural network has been created yet'
+        }), 400
+
+    if current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No dataset has been loaded yet'
+        }), 400
+
+    data = request.json
+    num_epochs = int(data.get('epochs', 100))
+
+    try:
+        # First check if network is fully connected
+        is_fully_connected_td = nx_graph.isFullyConnectedTopDown()
+        is_fully_connected_bu = nx_graph.isFullyConnectedBottomUp()
+
+        if not (is_fully_connected_td and is_fully_connected_bu):
+            return jsonify({
+                'status': 'error',
+                'message': 'Network is not fully connected. Cannot train.'
+            }), 400
+
+        # Set the loss function based on problem type
+        problem_type = current_dataset.problem_type()
+        nx_graph.set_loss(problem_type)
+
+        # Parse the network to Keras
+        nx_graph.parseKeras()
+
+        # Divide the dataset
+        df_train_input, df_test_input, df_train_output, df_test_output = current_dataset.divide_data()
+
+        # Train the model
+        nx_graph.train_model(df_train_input, df_train_output, num_epochs)
+
+        # Test the model
+        test_results = nx_graph.test_model(df_test_input, df_test_output)
+
+        # Save the model
+        nx_graph.save_model()
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Model trained successfully for {num_epochs} epochs',
+            'test_loss': float(test_results) if isinstance(test_results, (int, float)) else float(test_results[0]),
+            'model_saved': True,
+            'model_path': nx_graph.keras_path
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Error during training: {str(e)}'
+        }), 500
+
+
+@app.route('/get_training_info', methods=['GET'])
+def get_training_info():
+    """Get information about the dataset and network for training"""
+    global nx_graph, current_dataset
+
+    if nx_graph is None or current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'Network or dataset not properly initialized'
+        }), 400
+
+    try:
+        # Get dataset info
+        num_samples = len(current_dataset.df)
+        num_inputs = len(current_dataset.df_inputs.columns)
+        num_outputs = len(current_dataset.df_outputs.columns)
+        problem_type = current_dataset.problem_type()
+        train_size = int(current_dataset.train_size * 100)
+
+        # Get network info
+        num_nodes = nx_graph.nxg.number_of_nodes()
+        num_edges = nx_graph.nxg.number_of_edges()
+
+        return jsonify({
+            'status': 'success',
+            'dataset_info': {
+                'num_samples': num_samples,
+                'num_inputs': num_inputs,
+                'num_outputs': num_outputs,
+                'problem_type': problem_type,
+                'train_split': train_size,
+                'test_split': 100 - train_size
+            },
+            'network_info': {
+                'num_nodes': num_nodes,
+                'num_edges': num_edges,
+                'num_hidden_layers': num_nodes - num_inputs - num_outputs
+            }
         })
     except Exception as e:
         return jsonify({
