@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .action-button {
+            padding: 10px 20px;
+            background-color: white;
+            color: #333;
+            border: 2px solid #333;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background-color: #333;
+            color: white;
+        }
+
+        .graph-container {
+            flex: 1;
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #333;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #pyvisFrame {
+            width: 100%;
+            height: 500px;
+            border: none;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        .train-button {
+            padding: 12px 24px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 16px;
+        }
+
+        .train-button:hover {
+            background-color: #000;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 80%; /* 4 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            overflow: auto;
+        }
+
+        .modal.show {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+            margin-top: -10px;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #000;
+        }
+
+        .delete-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .delete-button {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Network Edition</h1>
+
+        <div class="action-buttons">
+            <button class="action-button" id="addNeuronBtn">Add neuron</button>
+            <button class="action-button" id="addEdgeBtn">Add edge</button>
+            <div class="delete-buttons">
+                <button class="delete-button" id="deleteNodeBtn">Delete node</button>
+                <button class="delete-button" id="deleteEdgeBtn">Delete edge</button>
+            </div>
+        </div>
+
+        <div class="graph-container">
+            <iframe id="pyvisFrame" src="{{ url_for('static', filename='graphs/pyvis.html') }}?v={{ cache_buster }}"></iframe>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="action-button" id="trainNetworkBtn" style="background-color: #333; color: white; border: none; padding: 12px 24px;">Train Neuronal Network</button>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Paso 4 de 5</div>
+        </div>
+    </div>
+
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <!-- Modal para añadir neuronas -->
+    <div id="neuronModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Add Neurons</div>
+            </div>
+            <form id="neuronForm">
+                <div class="form-group">
+                    <label for="neuronCount">Number of neurons:</label>
+                    <input type="number" id="neuronCount" name="neuronCount" min="1" required>
+                </div>
+                <button type="submit" class="submit-btn">Add neurons</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para añadir edges -->
+    <div id="edgeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Add Edge</div>
+            </div>
+            <form id="edgeForm">
+                <div class="form-group">
+                    <label for="sourceNode">Source node ID:</label>
+                    <input type="number" id="sourceNode" name="sourceNode" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="targetNode">Target node ID:</label>
+                    <input type="number" id="targetNode" name="targetNode" min="0" required>
+                </div>
+                <button type="submit" class="submit-btn">Add edge</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar nodo -->
+    <div id="deleteNodeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Delete Node</div>
+            </div>
+            <form id="deleteNodeForm">
+                <div class="form-group">
+                    <label for="nodeToDelete">Node ID to delete:</label>
+                    <input type="number" id="nodeToDelete" name="nodeToDelete" min="0" required>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                    Note: Deleting a node will also remove all its edges.
+                </p>
+                <button type="submit" class="submit-btn" style="background-color: #dc3545;">Delete node</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para eliminar edge -->
+    <div id="deleteEdgeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title">Delete Edge</div>
+            </div>
+            <form id="deleteEdgeForm">
+                <div class="form-group">
+                    <label for="edgeSource">Source node ID:</label>
+                    <input type="number" id="edgeSource" name="edgeSource" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="edgeTarget">Target node ID:</label>
+                    <input type="number" id="edgeTarget" name="edgeTarget" min="0" required>
+                </div>
+                <button type="submit" class="submit-btn" style="background-color: #dc3545;">Delete edge</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para entrenamiento -->
+    <div id="trainingModal" class="modal">
+        <div class="modal-content" style="width: 600px;">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <div class="modal-title" style="font-size: 24px; margin-bottom: 20px;">Train Neural Network</div>
+            </div>
+            <div id="trainingInfo" style="margin-bottom: 30px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #333;">Network Information</h3>
+                <div id="networkInfoContent" style="font-size: 16px; color: #555; line-height: 1.8;">
+                    Loading network information...
+                </div>
+            </div>
+            <form id="trainingForm" style="margin-top: 30px;">
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label for="epochs" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 10px; display: block;">Number of epochs:</label>
+                    <input type="number" id="epochs" name="epochs" min="1" max="10000" value="100" required style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 20px; padding: 15px 30px; font-size: 18px; width: 100%;">Start Training</button>
+            </form>
+            <div id="trainingProgress" style="display: none; margin-top: 30px;">
+                <div style="text-align: center;">
+                    <div class="loading-spinner" style="margin: 0 auto; width: 50px; height: 50px;"></div>
+                    <p style="margin-top: 15px; color: #666; font-size: 16px;">Training in progress...</p>
+                </div>
+            </div>
+            <div id="trainingResults" style="display: none; margin-top: 30px; padding: 20px; background-color: #f0f8ff; border-radius: 5px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #333;">Training Results</h3>
+                <div id="resultsContent" style="font-size: 16px; line-height: 1.8; color: #555;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para recargar el iframe de PyVis
+        function reloadPyvisGraph() {
+            const iframe = document.getElementById('pyvisFrame');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const timestamp = new Date().getTime();
+
+            // Mostrar el loading overlay
+            loadingOverlay.style.display = 'flex';
+
+            // Primero, limpia el src para forzar una recarga completa
+            iframe.src = 'about:blank';
+
+            // Luego, establece el nuevo src con timestamp
+            setTimeout(() => {
+                iframe.src = "{{ url_for('static', filename='graphs/pyvis.html') }}?v=" + timestamp;
+
+                // Ocultar el loading cuando el iframe se cargue
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500); // Pequeño delay para asegurar que el gráfico se renderice
+                };
+            }, 100);
+        }
+
+        // Manejo de modales
+        const modals = {
+            neuron: document.getElementById('neuronModal'),
+            edge: document.getElementById('edgeModal'),
+            deleteNode: document.getElementById('deleteNodeModal'),
+            deleteEdge: document.getElementById('deleteEdgeModal'),
+            training: document.getElementById('trainingModal')
+        };
+
+        const buttons = {
+            neuron: document.getElementById('addNeuronBtn'),
+            edge: document.getElementById('addEdgeBtn'),
+            deleteNode: document.getElementById('deleteNodeBtn'),
+            deleteEdge: document.getElementById('deleteEdgeBtn'),
+            train: document.getElementById('trainNetworkBtn')
+        };
+
+        // Abrir modales
+        buttons.neuron.onclick = () => {
+            modals.neuron.classList.add('show');
+        };
+        buttons.edge.onclick = () => {
+            modals.edge.classList.add('show');
+        };
+        buttons.deleteNode.onclick = () => {
+            modals.deleteNode.classList.add('show');
+        };
+        buttons.deleteEdge.onclick = () => {
+            modals.deleteEdge.classList.add('show');
+        };
+
+        // Cerrar modales
+        document.querySelectorAll('.close').forEach(closeBtn => {
+            closeBtn.onclick = function() {
+                this.closest('.modal').classList.remove('show');
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        }
+
+        // Añadir neuronas
+        document.getElementById('neuronForm').onsubmit = function(e) {
+            e.preventDefault();
+            const neuronCount = document.getElementById('neuronCount').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/add_neuron', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ neuronCount: neuronCount })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.neuron.classList.remove('show');
+                    document.getElementById('neuronCount').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error adding neurons');
+            });
+        }
+
+        // Añadir edge
+        document.getElementById('edgeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const sourceNode = document.getElementById('sourceNode').value;
+            const targetNode = document.getElementById('targetNode').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/add_edge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    source: sourceNode,
+                    target: targetNode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.edge.classList.remove('show');
+                    document.getElementById('sourceNode').value = '';
+                    document.getElementById('targetNode').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error adding the edge');
+            });
+        }
+
+        // Eliminar nodo
+        document.getElementById('deleteNodeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const nodeId = document.getElementById('nodeToDelete').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            if (confirm(`Are you sure you want to delete node ${nodeId}? This will also delete all its edges.`)) {
+                // Mostrar loading
+                loadingOverlay.style.display = 'flex';
+
+                fetch('/delete_node', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ node_id: nodeId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        reloadPyvisGraph();
+                        modals.deleteNode.classList.remove('show');
+                        document.getElementById('nodeToDelete').value = '';
+                    } else {
+                        loadingOverlay.style.display = 'none';
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingOverlay.style.display = 'none';
+                    alert('There was an error deleting the node');
+                });
+            }
+        }
+
+        // Eliminar edge
+        document.getElementById('deleteEdgeForm').onsubmit = function(e) {
+            e.preventDefault();
+            const sourceNode = document.getElementById('edgeSource').value;
+            const targetNode = document.getElementById('edgeTarget').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Mostrar loading
+            loadingOverlay.style.display = 'flex';
+
+            fetch('/delete_edge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    source: sourceNode,
+                    target: targetNode
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    reloadPyvisGraph();
+                    modals.deleteEdge.classList.remove('show');
+                    document.getElementById('edgeSource').value = '';
+                    document.getElementById('edgeTarget').value = '';
+                } else {
+                    loadingOverlay.style.display = 'none';
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('There was an error deleting the edge');
+            });
+        }
+
+        // Entrenar red neuronal
+        buttons.train.onclick = function() {
+            // First check if network is fully connected
+            fetch('/check_network_connectivity')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.is_fully_connected) {
+                        // Network is fully connected, show training modal
+                        loadTrainingInfo();
+                        modals.training.classList.add('show');
+                    } else {
+                        // Network is not fully connected
+                        alert(data.message || 'Network is not fully connected. Please ensure all layers are properly connected before training.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error checking network connectivity');
+                });
+        }
+
+        // Load training information
+        function loadTrainingInfo() {
+            fetch('/get_training_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const infoContent = document.getElementById('networkInfoContent');
+                        const dataset = data.dataset_info;
+                        const network = data.network_info;
+
+                        infoContent.innerHTML = `
+                            <strong>Dataset:</strong><br>
+                            • Samples: ${dataset.num_samples}<br>
+                            • Inputs: ${dataset.num_inputs}<br>
+                            • Outputs: ${dataset.num_outputs}<br>
+                            • Problem type: ${dataset.problem_type}<br>
+                            • Train/Test split: ${dataset.train_split}%/${dataset.test_split}%<br><br>
+                            <strong>Network:</strong><br>
+                            • Total nodes: ${network.num_nodes}<br>
+                            • Total edges: ${network.num_edges}<br>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('networkInfoContent').innerHTML = 'Error loading network information';
+                });
+        }
+
+        // Handle training form submission
+        document.getElementById('trainingForm').onsubmit = function(e) {
+            e.preventDefault();
+
+            const epochs = document.getElementById('epochs').value;
+            const trainingForm = document.getElementById('trainingForm');
+            const trainingProgress = document.getElementById('trainingProgress');
+            const trainingResults = document.getElementById('trainingResults');
+            const resultsContent = document.getElementById('resultsContent');
+
+            // Hide form and results, show progress
+            trainingForm.style.display = 'none';
+            trainingResults.style.display = 'none';
+            trainingProgress.style.display = 'block';
+
+            // Start training
+            fetch('/train_network', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ epochs: epochs })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide progress
+                trainingProgress.style.display = 'none';
+
+                if (data.status === 'success') {
+                    // Show results
+                    trainingResults.style.display = 'block';
+                    resultsContent.innerHTML = `
+                        <strong style="color: green;">✓ Training completed successfully!</strong><br><br>
+                        • Epochs: ${epochs}<br>
+                        • Test loss: ${data.test_loss.toFixed(4)}<br>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="submit-btn" style="flex: 1;" onclick="document.getElementById('trainingModal').classList.remove('show'); window.location.reload();">Close & Refresh</button>
+            <button class="submit-btn" style="flex: 1; background-color: #28a745;" onclick="window.location.href='/results';">Go to Results</button>
+        </div>
+                    `;
+                } else {
+                    // Show error
+                    trainingResults.style.display = 'block';
+                    resultsContent.innerHTML = `
+                        <strong style="color: red;">✗ Training failed</strong><br><br>
+                        Error: ${data.message}<br><br>
+                        <button class="submit-btn" onclick="document.getElementById('trainingModal').classList.remove('show');">Close</button>
+                    `;
+                    // Show form again
+                    trainingForm.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                trainingProgress.style.display = 'none';
+                trainingForm.style.display = 'block';
+                alert('There was an error during training: ' + error);
+            });
+        }
+    </script>
+</body>
+</html>

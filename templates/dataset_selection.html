@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Selection</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 40px;
+            font-weight: normal;
+        }
+
+        .content {
+            display: flex;
+            gap: 20px;
+        }
+
+        .left-column {
+            flex: 3;
+            border-right: 1px solid #e0e0e0;
+            padding-right: 20px;
+        }
+
+        .right-column {
+            flex: 2;
+            padding-left: 20px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .dataset-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .dataset-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dataset-card:hover {
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            border-color: #999;
+            background-color: #333;
+            color: white;
+        }
+
+        .dataset-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: inherit;
+        }
+
+        .dataset-card p {
+            font-size: 13px;
+            color: inherit;
+            line-height: 1.4;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #999;
+            background-color: #f5f5f5;
+        }
+
+        .upload-area.dragover {
+            border-color: #333;
+            background-color: #f0f0f0;
+        }
+
+        .upload-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .upload-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .upload-note {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .continue-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            background-color: #000;
+        }
+
+        .selected {
+            border: 2px solid #333;
+            background-color: #597081;
+            color: white;
+        }
+
+        .selected h3, .selected p {
+            color: white;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        #file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 20%; /* 1 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DATASET SELECTION</h1>
+
+        <div class="content">
+            <div class="left-column">
+                <h2>Select one real dataset</h2>
+                <p class="subtitle">Select one dataset from Scikit-Learn</p>
+
+                <div class="dataset-options">
+                    <div class="dataset-card" data-name="iris_plants">
+                        <h3>Iris plants dataset</h3>
+                        <p>The famous Iris database, first used by Sir R.A. Fisher. The data set contains 3 classes of 50 instances each, where each class refers to a type of iris plant.</p>
+                    </div>
+
+                    <div class="dataset-card" data-name="diabetes">
+                        <h3>Diabetes dataset</h3>
+                        <p>Ten baseline variables, age, sex, body mass index, average blood pressure, and six blood serum measurements were obtained for each of 442 diabetes patients, as well as the response of interest, a quantitative measure of disease progression one year after baseline.</p>
+                    </div>
+
+                    <div class="dataset-card" data-name="digits">
+                        <h3>Optical recognition of handwritten digits dataset</h3>
+                        <p>The data set contains images of hand-written digits: 10 classes where each class refers to a digit.</p>
+                    </div>
+
+                    <div class="dataset-card" data-name="linnerrud">
+                        <h3>Linnerrud dataset</h3>
+                        <p>The Linnerud dataset is a multi-output regression dataset. It consists of three exercise (data) and three physiological (target) variables collected from twenty middle-aged men in a fitness club.</p>
+                    </div>
+
+                    <div class="dataset-card" data-name="wine_recognition">
+                        <h3>Wine recognition dataset</h3>
+                        <p>The data is the results of a chemical analysis of wines grown in the same region in Italy by three different cultivators. There are thirteen different measurements taken for different constituents found in the three types of wine.</p>
+                    </div>
+
+                    <div class="dataset-card" data-name="breast_cancer_diagnostic">
+                        <h3>Breast cancer wisconsin (diagnostic) dataset</h3>
+                        <p>Features are computed from a digitized image of a fine needle aspirate (FNA) of a breast mass. They describe characteristics of the cell nuclei present in the image.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <h2>Upload a dataset</h2>
+                <p class="subtitle">Upload a dataset with .csv format</p>
+
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-area" id="drop-area">
+                        <div class="upload-icon">
+                            <svg width="50" height="60" viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 0H40C45.5 0 50 4.5 50 10V50C50 55.5 45.5 60 40 60H10C4.5 60 0 55.5 0 50V10C0 4.5 4.5 0 10 0ZM10 5C7.25 5 5 7.25 5 10V50C5 52.75 7.25 55 10 55H40C42.75 55 45 52.75 45 50V10C45 7.25 42.75 5 40 5H10Z" fill="#333"/>
+                                <path d="M25 15L15 30H20V45H30V30H35L25 15Z" fill="#333"/>
+                            </svg>
+                        </div>
+                        <div class="upload-title">Upload Dataset</div>
+                        <p class="upload-text">Drop your files here or click here</p>
+                        <p class="upload-note">Please upload a csv file</p>
+                        <input type="file" id="file-input" name="file" accept=".csv">
+                        <div id="file-name"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Page 1 of 5</div>
+            <button class="continue-btn" id="continue-btn">Continue</button>
+        </div>
+    </div>
+
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        // Añadir funcionalidad para seleccionar un dataset
+        const datasetCards = document.querySelectorAll('.dataset-card');
+        const fileInput = document.getElementById('file-input');
+        const dropArea = document.getElementById('drop-area');
+        const fileName = document.getElementById('file-name');
+        const uploadForm = document.getElementById('upload-form');
+        let selectedDatasetName = null;
+        let uploadedFile = null;
+
+        // Manejar selección de tarjetas de conjunto de datos
+        datasetCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Eliminar la clase 'selected' de todas las tarjetas
+                datasetCards.forEach(c => c.classList.remove('selected'));
+
+                // Añadir la clase 'selected' a la tarjeta clicada
+                this.classList.add('selected');
+
+                // Guardar el nombre del dataset seleccionado
+                selectedDatasetName = this.getAttribute('data-name');
+
+                // Resetear cualquier archivo cargado
+                uploadedFile = null;
+                fileName.textContent = '';
+            });
+        });
+
+        // Evento de clic para el área de carga
+        dropArea.addEventListener('click', function(e) {
+            fileInput.click();
+        });
+
+        // Eventos para arrastrar y soltar
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Añadir clase cuando se arrastra sobre el área
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, function() {
+                dropArea.classList.add('dragover');
+            }, false);
+        });
+
+        // Quitar clase cuando se sale del área o se suelta
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, function() {
+                dropArea.classList.remove('dragover');
+            }, false);
+        });
+
+        // Manejar la subida del archivo
+        dropArea.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        // Cuando se selecciona un archivo con el explorador
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length) {
+                const file = files[0];
+
+                // Verificar que sea un archivo CSV
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    uploadedFile = file;
+                    fileName.textContent = `Selected file: ${file.name}`;
+
+                    // Deseleccionar cualquier dataset de la izquierda
+                    datasetCards.forEach(c => c.classList.remove('selected'));
+                    selectedDatasetName = null;
+                } else {
+                    alert('Please select a CSV file.');
+                    fileInput.value = '';
+                    fileName.textContent = '';
+                }
+            }
+        }
+
+        // Manejar el botón continuar
+        document.getElementById('continue-btn').addEventListener('click', function() {
+            if (selectedDatasetName) {
+                // Enviar el nombre del dataset seleccionado al servidor
+                fetch('/select_dataset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ dataset_name: selectedDatasetName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al seleccionar el dataset');
+                });
+            } else if (uploadedFile) {
+                // Crear FormData para enviar el archivo
+                const formData = new FormData();
+                formData.append('file', uploadedFile);
+
+                // Enviar el archivo al servidor
+                fetch('/upload_dataset', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.href = data.redirect;
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al subir el archivo');
+                });
+            } else {
+                alert('Please select a dataset or upload a CSV file');
+            }
+        });
+    </script>
+</body>
+</html>

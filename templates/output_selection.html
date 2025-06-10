@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Output Selection</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 40px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .section-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .columns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .column-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .column-card:hover {
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+            border-color: #999;
+        }
+
+        .column-card.selected {
+            border: 2px solid #000000;
+            background-color: #B7CECE;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .column-checkbox {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: black; /* Checkbox negro cuando está seleccionado */
+        }
+
+        .column-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .column-type {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .column-preview {
+            font-size: 12px;
+            color: #888;
+            max-height: 150px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .preview-row {
+            padding: 3px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .preview-row:last-child {
+            border-bottom: none;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .continue-btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            background-color: #000;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 40%; /* 2 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Selection</h1>
+        <h2>Output Selection</h2>
+
+        <div class="section-title">Select columns</div>
+        <div class="section-description">Select the column from the dataset which will be the output for the neuronal network</div>
+
+        <div class="columns-grid" id="columns-container">
+            <!-- Column cards will be dynamically generated from the Python backend -->
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Page 2 of 5</div>
+            <button class="continue-btn" id="continue-btn">Continue</button>
+        </div>
+    </div>
+
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <script>
+        // Function to generate column cards based on the data received from the server
+        function generateColumnCards(columnsData) {
+            const container = document.getElementById('columns-container');
+
+            // Clear any existing cards
+            container.innerHTML = '';
+
+            columnsData.forEach((column, index) => {
+                const card = document.createElement('div');
+                card.className = 'column-card';
+                card.dataset.columnName = column.name;
+
+                const header = document.createElement('div');
+                header.className = 'column-header';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox'; // Mantenemos checkbox, pero con comportamiento de radio
+                checkbox.id = `column-${index}`;
+                checkbox.className = 'column-checkbox';
+                checkbox.dataset.columnName = column.name;
+
+                const label = document.createElement('label');
+                label.htmlFor = `column-${index}`;
+                label.className = 'column-name';
+                label.textContent = column.name;
+
+                header.appendChild(checkbox);
+                header.appendChild(label);
+
+                const type = document.createElement('div');
+                type.className = 'column-type';
+                type.textContent = column.type;
+
+                const preview = document.createElement('div');
+                preview.className = 'column-preview';
+
+                column.preview.forEach(value => {
+                    const row = document.createElement('div');
+                    row.className = 'preview-row';
+                    row.textContent = value;
+                    preview.appendChild(row);
+                });
+
+                card.appendChild(header);
+                card.appendChild(type);
+                card.appendChild(preview);
+
+                // Add click event for the entire card
+                card.addEventListener('click', function(e) {
+                    // Don't toggle if clicking on the checkbox directly
+                    if (e.target !== checkbox) {
+                        // Hacemos que todos los checkboxes se desmarquen primero
+                        document.querySelectorAll('.column-checkbox').forEach(cb => {
+                            cb.checked = false;
+                        });
+                        // Removemos la clase selected de todas las tarjetas
+                        document.querySelectorAll('.column-card').forEach(card => {
+                            card.classList.remove('selected');
+                        });
+
+                        // Luego marcamos solo el checkbox de esta tarjeta
+                        checkbox.checked = true;
+                    } else {
+                        // Si se hace clic directamente en el checkbox
+                        if (checkbox.checked) {
+                            // Si se está marcando, desmarcamos todos los demás
+                            document.querySelectorAll('.column-checkbox').forEach(cb => {
+                                if (cb !== checkbox) {
+                                    cb.checked = false;
+                                }
+                            });
+
+                            // Removemos la clase selected de todas las otras tarjetas
+                            document.querySelectorAll('.column-card').forEach(c => {
+                                if (c !== card) {
+                                    c.classList.remove('selected');
+                                }
+                            });
+                        }
+                    }
+
+                    // Toggle selected class basado en el estado del checkbox
+                    if (checkbox.checked) {
+                        this.classList.add('selected');
+                    } else {
+                        this.classList.remove('selected');
+                    }
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        // Fetch column data from server when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('/get_dataset_columns')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        generateColumnCards(data.columns);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error loading the dataset columns');
+                });
+        });
+
+        // Handle continue button click
+        document.getElementById('continue-btn').addEventListener('click', function() {
+            // Get selected column (solo habrá uno seleccionado)
+            const selectedColumns = [];
+            document.querySelectorAll('.column-checkbox:checked').forEach(checkbox => {
+                selectedColumns.push(checkbox.dataset.columnName);
+            });
+
+            if (selectedColumns.length === 0) {
+                alert('Please select one output column');
+                return;
+            }
+
+            // Send selected column to server
+            fetch('/set_target_columns', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ target_columns: selectedColumns })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Redirect to the next page in the workflow
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error setting the target column');
+            });
+        });
+    </script>
+</body>
+</html>
