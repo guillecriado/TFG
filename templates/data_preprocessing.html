@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Preprocessing</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 40px;
+            font-weight: normal;
+            text-transform: uppercase;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .section-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .option-group {
+            margin-bottom: 15px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            accent-color: black;
+        }
+
+        .custom-value-input {
+            margin-top: 10px;
+            margin-left: 28px;
+        }
+
+        .input-field {
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            position: relative;
+        }
+
+        .input-field-container {
+            position: relative;
+            margin-bottom: 20px;
+            max-width: 200px;
+        }
+
+        .input-field-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            color: #666;
+        }
+
+        .dropdown-field {
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 200px;
+            margin-bottom: 20px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+        }
+
+        .model-label {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .slider-container {
+            margin-top: 20px;
+        }
+
+        .slider-label {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .slider {
+            width: 100%;
+            margin-top: 10px;
+            -webkit-appearance: none;
+            height: 5px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #666;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #666;
+            cursor: pointer;
+        }
+
+        .slider-range {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .page-indicator {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #000;
+        }
+
+        .button.secondary {
+            background-color: white;
+            color: #333;
+            border: 1px solid #333;
+        }
+
+        .button.secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 60%; /* 3 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            text-transform: uppercase;
+            color: #333;
+        }
+
+        .modal-body {
+            margin-bottom: 30px;
+        }
+
+        .modal-footer {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Preprocessing</h1>
+
+        <div class="content-grid">
+            <!-- Data Cleaning Section -->
+            <div class="section">
+                <div class="section-title">Data cleaning</div>
+                <div class="section-description">Null value cleaning per row, per column and custom value cleaning</div>
+
+                <div class="option-group">
+                    <label class="option-label">
+                        <input type="checkbox" name="cleaning-option" value="row-null" class="cleaning-checkbox">
+                        Cleaning rows with null values
+                    </label>
+
+                    <label class="option-label">
+                        <input type="checkbox" name="cleaning-option" value="column-null" class="cleaning-checkbox">
+                        Cleaning columns with null values
+                    </label>
+
+                    <label class="option-label">
+                        <input type="checkbox" name="cleaning-option" value="custom" class="cleaning-checkbox">
+                        Customised cleaning
+                    </label>
+
+                    <div class="custom-value-input" id="custom-value-container" style="display: none;">
+                        <div class="input-field-container">
+                            <input type="text" class="input-field" id="custom-value" placeholder="Value">
+                            <button class="input-field-icon" title="Add custom value">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standardization Section -->
+            <div class="section">
+                <div class="section-title">Standardization</div>
+                <div class="section-description">Standardisation of the data depending on the type of problem chosen, different options can be chosen.</div>
+
+                <div class="option-group">
+                    <div>
+                        <label class="model-label">Standardization model</label>
+                        <select class="dropdown-field" id="standardization-model">
+                            <option value="none">None</option>
+                            <!-- Options will be populated based on problem type -->
+                        </select>
+                    </div>
+
+                    <div class="slider-container">
+                        <label class="slider-label">Train/test split</label>
+                        <input type="range" min="0" max="100" value="80" class="slider" id="train-test-split">
+                        <div class="slider-range">
+                            <span>0</span>
+                            <span>100</span>
+                        </div>
+                        <div class="slider-value" id="split-value">80</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="page-indicator">Page 3 of 5</div>
+            <div class="buttons-container">
+                <button class="button secondary" id="generate-empty-network">Generate empty network</button>
+                <button class="button" id="generate-standard-network">Generate standard network</button>
+            </div>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
+        </div>
+    </div>
+
+    <!-- Quantities Selection Modal -->
+    <div class="modal" id="quantities-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Quantities Selection</div>
+            </div>
+            <div class="modal-body">
+                <div class="input-field-container">
+                    <input type="number" min="1" class="input-field" id="hidden-layers" placeholder="Nº hidden layers">
+                    <button class="input-field-icon" title="Number of hidden layers">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="input-field-container">
+                    <input type="number" min="1" class="input-field" id="neurons-per-layer" placeholder="Nº hidden neurons per layer">
+                    <button class="input-field-icon" title="Number of neurons per layer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="button" id="confirm-quantities">Generate standard network</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Function to populate standardization options based on problem type
+        function populateStandardizationOptions(problemType) {
+            const dropdown = document.getElementById('standardization-model');
+
+            // Clear existing options except "None"
+            while (dropdown.options.length > 1) {
+                dropdown.options.remove(1);
+            }
+
+            // Add options based on problem type
+            let options = [];
+
+            if (problemType === 'REGRESSION') {
+                options = [
+                    'StandardScaler',
+                    'MinMaxScaler',
+                    'PowerTransformer',
+                    'zscore',
+                    'add_constant'
+                ];
+            } else if (problemType === 'BINARY CLASSIFICATION') {
+                options = [
+                    'StandardScaler',
+                    'Binarizer',
+                    'LabelEncoder',
+                    'compute_class_weight'
+                ];
+            } else if (problemType === 'CLASSIFICATION') {
+                options = [
+                    'OneHotEncoder',
+                    'LabelEncoder',
+                    'RobustScaler',
+                    'SMOTE',
+                    'PCA'
+                ];
+            }
+
+            // Add options to dropdown
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.toLowerCase().replace(/[_\s]/g, '');
+                opt.textContent = option;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        // Handle cleaning option checkboxes (only one can be selected)
+        const cleaningCheckboxes = document.querySelectorAll('.cleaning-checkbox');
+        cleaningCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Uncheck all other checkboxes
+                    cleaningCheckboxes.forEach(cb => {
+                        if (cb !== this) {
+                            cb.checked = false;
+                        }
+                    });
+
+                    // Show custom value input if "Customised cleaning" is selected
+                    document.getElementById('custom-value-container').style.display =
+                        this.value === 'custom' ? 'block' : 'none';
+                } else {
+                    // Hide custom value input if "Customised cleaning" is unchecked
+                    if (this.value === 'custom') {
+                        document.getElementById('custom-value-container').style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        // Update train/test split value display
+        const splitSlider = document.getElementById('train-test-split');
+        const splitValue = document.getElementById('split-value');
+
+        splitSlider.addEventListener('input', function() {
+            splitValue.textContent = this.value;
+        });
+
+        // Generate empty network button click
+        document.getElementById('generate-empty-network').addEventListener('click', function() {
+            sendNetworkConfiguration('empty');
+        });
+
+        // Generate standard network button click
+        document.getElementById('generate-standard-network').addEventListener('click', function() {
+            document.getElementById('quantities-modal').style.display = 'flex';
+        });
+
+        // Confirm quantities button click
+        document.getElementById('confirm-quantities').addEventListener('click', function() {
+            const hiddenLayers = document.getElementById('hidden-layers').value;
+            const neuronsPerLayer = document.getElementById('neurons-per-layer').value;
+
+            if (!hiddenLayers || !neuronsPerLayer) {
+                alert('Please enter values for both fields');
+                return;
+            }
+
+            document.getElementById('quantities-modal').style.display = 'none';
+            sendNetworkConfiguration('standard', hiddenLayers, neuronsPerLayer);
+        });
+
+        // Function to send configuration to server
+        function sendNetworkConfiguration(type, hiddenLayers = null, neuronsPerLayer = null) {
+            // Get selected cleaning option
+            let cleaningOption = '';
+            cleaningCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    cleaningOption = cb.value;
+                }
+            });
+
+            // Get custom value if customized cleaning selected
+            let customValue = null;
+            if (cleaningOption === 'custom') {
+                customValue = document.getElementById('custom-value').value;
+                if (customValue.trim() === '' && cleaningOption === 'custom') {
+                    alert('Please enter a custom value for customized cleaning');
+                    return;
+                }
+            }
+
+            // Get standardization model
+            const standardizationModel = document.getElementById('standardization-model').value;
+
+            // Get train/test split
+            const trainTestSplit = document.getElementById('train-test-split').value;
+
+            // Create data object
+            const data = {
+                cleaning_option: cleaningOption,
+                custom_value: customValue,
+                standardization_model: standardizationModel,
+                train_test_split: trainTestSplit,
+                network_type: type
+            };
+
+            // Add network parameters if standard network
+            if (type === 'standard') {
+                data.hidden_layers = hiddenLayers;
+                data.neurons_per_layer = neuronsPerLayer;
+            }
+
+            // Send data to server
+            fetch('/process_data_preprocessing', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('There was an error processing your request');
+            });
+        }
+
+        // Close modal if clicked outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('quantities-modal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Fetch problem type from server and populate dropdown
+        function fetchProblemType() {
+            fetch('/get_problem_type')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        populateStandardizationOptions(data.problem_type);
+                    } else {
+                        console.error('Error:', data.message);
+                        // Default to regression if error
+                        populateStandardizationOptions('REGRESSION');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching problem type:', error);
+                    // Default to regression if fetch fails
+                    populateStandardizationOptions('REGRESSION');
+                });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchProblemType();
+
+            // Set default train/test split value
+            document.getElementById('split-value').textContent = splitSlider.value;
+        });
+    </script>
+</body>
+</html>

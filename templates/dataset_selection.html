@@ -171,7 +171,7 @@
 
         .selected {
             border: 2px solid #333;
-            background-color: #333;
+            background-color: #597081;
             color: white;
         }
 
@@ -188,6 +188,46 @@
             font-size: 14px;
             color: #333;
         }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #2196F3;
+            width: 20%; /* 1 de 5 */
+            transition: width 0.3s ease;
+            background-image: linear-gradient(
+                45deg,
+                rgba(255, 255, 255, 0.15) 25%,
+                transparent 25%,
+                transparent 50%,
+                rgba(255, 255, 255, 0.15) 50%,
+                rgba(255, 255, 255, 0.15) 75%,
+                transparent 75%,
+                transparent
+            );
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+            100% {
+                background-position: 0 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -200,34 +240,34 @@
                 <p class="subtitle">Select one dataset from Scikit-Learn</p>
 
                 <div class="dataset-options">
-                    <div class="dataset-card" data-name="olivetti_faces">
-                        <h3>Olivetti Faces</h3>
-                        <p>This dataset contains a set of face images taken between April 1992 and 1994 at AT&T Laboratories Cambridge.</p>
+                    <div class="dataset-card" data-name="iris_plants">
+                        <h3>Iris plants dataset</h3>
+                        <p>The famous Iris database, first used by Sir R.A. Fisher. The data set contains 3 classes of 50 instances each, where each class refers to a type of iris plant.</p>
                     </div>
 
-                    <div class="dataset-card" data-name="20newsgroups">
-                        <h3>The 20 newsgroups dataset</h3>
-                        <p>The 20 newsgroups dataset comprises around 18,000 newsgroups post on 20 topics split in two subsets.</p>
+                    <div class="dataset-card" data-name="diabetes">
+                        <h3>Diabetes dataset</h3>
+                        <p>Ten baseline variables, age, sex, body mass index, average blood pressure, and six blood serum measurements were obtained for each of 442 diabetes patients, as well as the response of interest, a quantitative measure of disease progression one year after baseline.</p>
                     </div>
 
-                    <div class="dataset-card" data-name="lfw">
-                        <h3>The Labeled Faces in the Wild face recognition</h3>
-                        <p>This dataset is a collection of JPEG pictures of famous people collected over the internet.</p>
+                    <div class="dataset-card" data-name="digits">
+                        <h3>Optical recognition of handwritten digits dataset</h3>
+                        <p>The data set contains images of hand-written digits: 10 classes where each class refers to a digit.</p>
                     </div>
 
-                    <div class="dataset-card" data-name="covtype">
-                        <h3>Forest covertypes</h3>
-                        <p>The samples in this dataset correspond to 30×30m patches of forest in the US.</p>
+                    <div class="dataset-card" data-name="linnerrud">
+                        <h3>Linnerrud dataset</h3>
+                        <p>The Linnerud dataset is a multi-output regression dataset. It consists of three exercise (data) and three physiological (target) variables collected from twenty middle-aged men in a fitness club.</p>
                     </div>
 
-                    <div class="dataset-card" data-name="rcv1">
-                        <h3>RCV1</h3>
-                        <p>Reuters Corpus Volume I (RCV1) is an archive of over 800,000 manually categorized newswire stories made available by Reuters, Ltd.</p>
+                    <div class="dataset-card" data-name="wine_recognition">
+                        <h3>Wine recognition dataset</h3>
+                        <p>The data is the results of a chemical analysis of wines grown in the same region in Italy by three different cultivators. There are thirteen different measurements taken for different constituents found in the three types of wine.</p>
                     </div>
 
-                    <div class="dataset-card" data-name="california_housing">
-                        <h3>Californian Housing dataset</h3>
-                        <p>We collected information on the variables using all the block groups in California from the 1990 Census. In this sample a block group on average includes 1425.5 individuals living in a geographically compact area.</p>
+                    <div class="dataset-card" data-name="breast_cancer_diagnostic">
+                        <h3>Breast cancer wisconsin (diagnostic) dataset</h3>
+                        <p>Features are computed from a digitized image of a fine needle aspirate (FNA) of a breast mass. They describe characteristics of the cell nuclei present in the image.</p>
                     </div>
                 </div>
             </div>
@@ -257,6 +297,12 @@
         <div class="footer">
             <div class="page-indicator">Page 1 of 5</div>
             <button class="continue-btn" id="continue-btn">Continue</button>
+        </div>
+    </div>
+
+    <div style="background-color: #f8f8f8; padding: 20px 0; margin-top: -20px;">
+        <div class="progress-bar">
+            <div class="progress"></div>
         </div>
     </div>
 

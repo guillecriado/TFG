@@ -1,20 +1,22 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 class Dataset:
 
-    def __init__(self, file_name):
-        self.path = file_name # TODO: Poner link completo cuando esté el cargador del dataset
-        self.df = pd.read_csv(self.path)
+    def __init__(self, file_name, extension):
+        if(extension == '.csv'):
+            self.path = file_name
+            self.df = pd.read_csv(self.path)
+        elif(extension == 'sklearn'):
+            self.path = ""
+            self.df = file_name
         self.df_inputs = self.df
         self.df_outputs = self.df
         self.train_size=0.8
         self.random_state=42
-
-    def __show_columns(self):
-        print("Columnas disponibles en el dataset:")
-        for i, col in enumerate(self.df.columns):
-            print(f"{i}: {col}")
+        self.test_size=1-self.train_size
+        self.standarization=''
 
     def input_columns_selection(self):
         seleccion = input("Introduce los números de las columnas que quieres usar como input, separados por comas: ")
@@ -43,11 +45,11 @@ class Dataset:
         :return: El tipo de problema al que nos enfrentamos.
         """
         type=""
-        if pd.api.types.is_numeric_dtype(self.df_outputs):
-            if self.df_outputs.nunique() >= 10:
+        if all(pd.api.types.is_numeric_dtype(self.df_outputs[col]) for col in self.df_outputs):
+            if all(pd.api.types.is_float_dtype(self.df_outputs[column])for column in self.df_outputs):
                 type='REGRESSION'
             else:
-                type='BINARY CLASSIFICATION'
+                type='CLASSIFICATION'
         elif isinstance(self.df_outputs, pd.CategoricalDtype) or pd.api.types.is_string_dtype(self.df_outputs):
             type='CLASSIFICATION'
         else:
@@ -69,9 +71,33 @@ class Dataset:
         :return: Los conjuntos completamente divididos para el entrenamiento y test de la red neuronal.
         """
         df_train, df_test = self.__divide_dataset()
-        df_train_input=df_train[df_train[self.df_inputs]]
-        df_test_input=df_test[df_test[self.df_inputs]]
-        df_train_output=df_train[df_train[self.df_outputs]]
-        df_test_output=df_test[df_test[self.df_outputs]]
+
+        # Obtener los nombres de las columnas
+        input_columns = self.df_inputs.columns.tolist()
+        output_columns = self.df_outputs.columns.tolist()
+
+        # Seleccionar las columnas
+        df_train_input = df_train[input_columns]
+        df_test_input = df_test[input_columns]
+        df_train_output = df_train[output_columns]
+        df_test_output = df_test[output_columns]
+
         return df_train_input, df_test_input, df_train_output, df_test_output
 
+    def set_train_test_size(self, trainSize):
+        self.train_size=trainSize
+        self.test_size=1-self.train_size
+
+    def set_standarization(self, standarization):
+        self.standarization=standarization
+
+    def cleaning(self,cleaning_option,custom_value):
+        if cleaning_option == 'row-null':
+            self.df.dropna(inplace=True)
+        elif cleaning_option == 'column-null':
+            self.df.dropna(axis=1, inplace=True)
+        elif cleaning_option == 'custom':
+            self.df.replace(custom_value, np.nan, inplace=True)
+            self.df.dropna(inplace=True)
+            # Código alternativo
+            # df.drop(df[df.isin([custom_value]).any(axis=1)].index, inplace=True)
