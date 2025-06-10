@@ -1,4 +1,5 @@
 import networkx as nx
+import numpy as np
 from keras.src.models import Sequential
 from keras.src.layers import Dense
 from keras.api.optimizers import Adam
@@ -237,6 +238,7 @@ class NeuronalNetworkX:
         :param input_data: Son los datos sobre los que se quiere hacer una predicción.
         :return: La predicción.
         """
+        input_data = np.array(input_data)
         return self.model.predict(input_data)
 
     def clear_graph(self):

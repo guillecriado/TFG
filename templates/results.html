@@ -621,26 +621,31 @@
         }
 
         function saveModel() {
-            fetch('/save_model_action', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showModal('Model saved successfully!');
-                } else {
-                    alert('Error saving model: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('There was an error saving the model');
-            });
+    fetch('/save_model_action', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
         }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Show success message
+            showModal('Model saved successfully! Download will start automatically.');
 
+            // Trigger download
+            setTimeout(() => {
+                window.location.href = '/download_model';
+            }, 1000);
+        } else {
+            alert('Error saving model: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error saving the model');
+    });
+}
         function evaluateModel() {
             fetch('/evaluate_model_action', {
                 method: 'POST',

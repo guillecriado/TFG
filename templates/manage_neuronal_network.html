@@ -743,12 +743,10 @@
                         <strong style="color: green;">✓ Training completed successfully!</strong><br><br>
                         • Epochs: ${epochs}<br>
                         • Test loss: ${data.test_loss.toFixed(4)}<br>
-                        • Model saved: ${data.model_saved ? 'Yes' : 'No'}<br>
-                        • Model path: ${data.model_path || 'N/A'}<br><br>
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
-                            <button class="submit-btn" style="flex: 1;" onclick="document.getElementById('trainingModal').classList.remove('show'); window.location.reload();">Close & Refresh</button>
-                            <button class="submit-btn" style="flex: 1; background-color: #ffffff;" onclick="window.location.href='/results';">Go to Results</button>
-                        </div>
+            <button class="submit-btn" style="flex: 1;" onclick="document.getElementById('trainingModal').classList.remove('show'); window.location.reload();">Close & Refresh</button>
+            <button class="submit-btn" style="flex: 1; background-color: #28a745;" onclick="window.location.href='/results';">Go to Results</button>
+        </div>
                     `;
                 } else {
                     // Show error
