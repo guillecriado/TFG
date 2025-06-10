@@ -45,13 +45,11 @@ class Dataset:
         :return: El tipo de problema al que nos enfrentamos.
         """
         type=""
-        print("Valores numéricos?"+str(pd.api.types.is_numeric_dtype(self.df_outputs)))
-        print("Valores únicos: "+str(self.df_outputs.nunique() >= 10))
-        if pd.api.types.is_numeric_dtype(self.df_outputs):
-            if self.df_outputs.nunique() >= 10:
+        if all(pd.api.types.is_numeric_dtype(self.df_outputs[col]) for col in self.df_outputs):
+            if all(pd.api.types.is_float_dtype(self.df_outputs[column])for column in self.df_outputs):
                 type='REGRESSION'
             else:
-                type='BINARY CLASSIFICATION'
+                type='CLASSIFICATION'
         elif isinstance(self.df_outputs, pd.CategoricalDtype) or pd.api.types.is_string_dtype(self.df_outputs):
             type='CLASSIFICATION'
         else:

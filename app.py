@@ -701,9 +701,6 @@ def train_network():
         # Test the model
         test_results = nx_graph.test_model(df_test_input, df_test_output)
 
-        # Save the model
-        nx_graph.save_model()
-
         return jsonify({
             'status': 'success',
             'message': f'Model trained successfully for {num_epochs} epochs',
@@ -758,6 +755,218 @@ def get_training_info():
                 'num_hidden_layers': num_nodes - num_inputs - num_outputs
             }
         })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+# Add these new routes to your app.py file
+
+@app.route('/results')
+def results():
+    """Route for the results page"""
+    return render_template("results.html")
+
+
+@app.route('/get_results_data')
+def get_results_data():
+    """Get data needed for the results page"""
+    global current_dataset, nx_graph
+
+    if current_dataset is None or nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No dataset or network available'
+        }), 400
+
+    try:
+        # Get input and output columns
+        input_columns = current_dataset.df_inputs.columns.tolist()
+        output_columns = current_dataset.df_outputs.columns.tolist()
+        problem_type = current_dataset.problem_type()
+
+        # Get test data for evaluation
+        df_train_input, df_test_input, df_train_output, df_test_output = current_dataset.divide_data()
+
+        # Calculate metrics
+        predictions = nx_graph.predict(df_test_input)
+
+        metrics = {}
+        if problem_type == 'REGRESSION':
+            from sklearn.metrics import mean_absolute_error, mean_squared_error
+            import numpy as np
+
+            mae = mean_absolute_error(df_test_output, predictions)
+            mse = mean_squared_error(df_test_output, predictions)
+            rmse = np.sqrt(mse)
+
+            metrics = {
+                'mae': mae,
+                'mse': mse,
+                'rmse': rmse
+            }
+        else:
+            from sklearn.metrics import accuracy_score, recall_score, f1_score
+            import numpy as np
+
+            # Convert predictions to class predictions
+            if problem_type == 'BINARY CLASSIFICATION':
+                pred_classes = (predictions > 0.5).astype(int)
+            else:
+                pred_classes = np.argmax(predictions, axis=1)
+
+            accuracy = accuracy_score(df_test_output, pred_classes)
+            recall = recall_score(df_test_output, pred_classes, average='weighted')
+            f1 = f1_score(df_test_output, pred_classes, average='weighted')
+
+            metrics = {
+                'accuracy': accuracy,
+                'recall': recall,
+                'f1_score': f1
+            }
+
+        return jsonify({
+            'status': 'success',
+            'input_columns': input_columns,
+            'output_columns': output_columns,
+            'problem_type': problem_type,
+            'metrics': metrics
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/make_predictions', methods=['POST'])
+def make_predictions():
+    """Make predictions with the trained model"""
+    global nx_graph
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No trained model available'
+        }), 400
+
+    try:
+        data = request.json
+        input_data = data.get('input_data', [])
+
+        if not input_data:
+            return jsonify({
+                'status': 'error',
+                'message': 'No input data provided'
+            }), 400
+
+        # Make predictions
+        predictions = nx_graph.predict(input_data)
+
+        return jsonify({
+            'status': 'success',
+            'predictions': predictions.tolist()
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/download_model')
+def download_model():
+    """Download the trained model"""
+    global nx_graph
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No trained model available'
+        }), 400
+
+    try:
+        from flask import send_file
+        import os
+
+        # Check if model file exists
+        if not os.path.exists(nx_graph.keras_path):
+            return jsonify({
+                'status': 'error',
+                'message': 'Model file not found'
+            }), 404
+
+        # Send the model file as download
+        return send_file(
+            nx_graph.keras_path,
+            as_attachment=True,
+            download_name='neural_network_model.keras',
+            mimetype='application/octet-stream'
+        )
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/save_model_action', methods=['POST'])
+def save_model_action():
+    """Save model action for the results page"""
+    global nx_graph
+
+    if nx_graph is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No trained model available'
+        }), 400
+
+    try:
+        # The model should already be saved after training, but let's ensure it
+        nx_graph.save_model()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Model saved successfully',
+            'download_url': url_for('download_model')
+        })
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/evaluate_model_action', methods=['POST'])
+def evaluate_model_action():
+    """Evaluate model action for the results page"""
+    global nx_graph, current_dataset
+
+    if nx_graph is None or current_dataset is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'No trained model or dataset available'
+        }), 400
+
+    try:
+        # Get test data
+        df_train_input, df_test_input, df_train_output, df_test_output = current_dataset.divide_data()
+
+        # Evaluate the model
+        test_results = nx_graph.test_model(df_test_input, df_test_output)
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Model evaluation completed',
+            'test_loss': float(test_results) if isinstance(test_results, (int, float)) else float(test_results[0])
+        })
+
     except Exception as e:
         return jsonify({
             'status': 'error',
