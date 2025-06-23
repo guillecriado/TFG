@@ -424,6 +424,18 @@
                     <label for="epochs" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 10px; display: block;">Number of epochs:</label>
                     <input type="number" id="epochs" name="epochs" min="1" max="10000" value="100" required style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 5px;">
                 </div>
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label for="optimizer" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 10px; display: block;">Optimizer:</label>
+                    <select id="optimizer" name="optimizer" required style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 5px;">
+                        <option value="adam" selected>Adam</option>
+                        <option value="sgd">SGD (Stochastic Gradient Descent)</option>
+                        <option value="rmsprop">RMSprop</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label for="learningRate" style="font-weight: bold; color: #333; font-size: 16px; margin-bottom: 10px; display: block;">Learning rate:</label>
+                    <input type="number" id="learningRate" name="learningRate" min="0.0001" max="1" step="0.0001" value="0.001" required style="width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
                 <button type="submit" class="submit-btn" style="margin-top: 20px; padding: 15px 30px; font-size: 18px; width: 100%;">Start Training</button>
             </form>
             <div id="trainingProgress" style="display: none; margin-top: 30px;">
@@ -713,6 +725,8 @@
             e.preventDefault();
 
             const epochs = document.getElementById('epochs').value;
+            const optimizer = document.getElementById('optimizer').value;
+            const learningRate = document.getElementById('learningRate').value;
             const trainingForm = document.getElementById('trainingForm');
             const trainingProgress = document.getElementById('trainingProgress');
             const trainingResults = document.getElementById('trainingResults');
@@ -729,7 +743,11 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ epochs: epochs })
+                body: JSON.stringify({
+                    epochs: epochs,
+                    optimizer: optimizer,
+                    learning_rate: parseFloat(learningRate)
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -742,6 +760,8 @@
                     resultsContent.innerHTML = `
                         <strong style="color: green;">✓ Training completed successfully!</strong><br><br>
                         • Epochs: ${epochs}<br>
+                        • Optimizer: ${optimizer.toUpperCase()}<br>
+                        • Learning rate: ${learningRate}<br>
                         • Test loss: ${data.test_loss.toFixed(4)}<br>
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button class="submit-btn" style="flex: 1;" onclick="document.getElementById('trainingModal').classList.remove('show'); window.location.reload();">Close & Refresh</button>

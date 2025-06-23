@@ -1,14 +1,18 @@
+import keras.src.utils
 import networkx as nx
 import numpy as np
 from keras.src.models import Sequential
 from keras.src.layers import Dense
 from keras.api.optimizers import Adam
+from keras.api.optimizers import SGD
+from keras.src.optimizers import RMSprop
 
 
 class NeuronalNetworkX:
 
     #Constructor
     def __init__(self, numImputs, numOutputs):
+        self.problem_type = "CLASSIFICATION"
         self.nxg = nx.DiGraph()
         self.numInputNeuron=numImputs
         self.inputNeurons=list()
@@ -16,6 +20,7 @@ class NeuronalNetworkX:
         self.outputNeurons= list()
         self.nodeID: int =0
         self.model=Sequential()
+        self.optimizer=Adam(learning_rate=0.001)
         self.keras_path="my_model.keras"
         self.loss=''
 
@@ -25,6 +30,9 @@ class NeuronalNetworkX:
         self.numInputNeuron=numImputs
     def set_NumOutputs(self,numOutputs):
         self.numOutputNeuron=numOutputs
+
+    def set_problem_type(self,problem_type):
+        self.problem_type=problem_type
 
     def __get_neurons_of_layer(self, layer, nxg_aux):
         """
@@ -37,12 +45,12 @@ class NeuronalNetworkX:
         return sum(q for id_, q in quantity_list if id_ in layer and q is not None)
 
     def set_loss(self, problem_type):
-        if problem_type == 'BINARY CLASSIFICATION':
-            self.loss='BinaryCrossentropy'
-        elif problem_type == 'REGRESSION':
-            self.loss='MeanSquaredError'
+        if problem_type == 'REGRESSION':
+            #'MeanSquaredError'
+            self.loss=keras.api.losses.MeanSquaredError()
         else:
-            self.loss='CategoricalCrossentropy'
+            #'CategoricalCrossentropy'
+            self.loss = keras.api.losses.CategoricalCrossentropy()
 
     #Class methods
     def add_node(self, quantity, neuron_type):
@@ -150,9 +158,9 @@ class NeuronalNetworkX:
         previous_layer=list()
         self.inputNeurons.append(self.nodeID)
         self.add_node(self.numInputNeuron, 'Input Neuron')
-        for j in range(self.numOutputNeuron):  # Capa de salida
-            self.outputNeurons.append(self.nodeID)
-            self.add_node(1,'Target Neuron')
+        '''for j in range(self.numOutputNeuron):'''  # Capa de salida
+        self.outputNeurons.append(self.nodeID)
+        self.add_node(self.numOutputNeuron,'Target Neuron')
         previous_layer = self.inputNeurons
         if hidden_layers>0 and hidden_neurons>0:
             for k in range(hidden_layers): # Capas oculta
@@ -199,10 +207,13 @@ class NeuronalNetworkX:
         next_layer=list(nxg_aux.successors(layer[0])) # Here we suppose that the neuronal network is fully connected because the verification will be done beforehand
         size_next_layer=len(next_layer)
         if size_next_layer >0 : # There is more than 1 hidden layer
-            self.model.add(Dense(size_actual_later,activation='relu'))
+            self.model.add(Dense(size_actual_later,activation='linear'))
             self.__explore_hidden_layers(next_layer, nxg_aux)
         else: # Is going to be the output layer
-            self.model.add(Dense(size_actual_later,activation='sigmoid'))
+            if self.problem_type == 'CLASSIFICATION':
+                self.model.add(Dense(size_actual_later,activation='softmax'))
+            else:
+                self.model.add(Dense(size_actual_later,activation='sigmoid'))
 
     def save_model(self):
         """
@@ -219,8 +230,12 @@ class NeuronalNetworkX:
         :param num_epochs: Es el número de Epochs para entrenar a la red neuronal.
         :return: No se devuelve nada.
         """
-        self.model.compile(loss=self.loss, optimizer=Adam())
-        self.model.fit(train_input, train_target, epochs=num_epochs, verbose=0)
+        if self.problem_type == 'CLASSIFICATION':
+            train_target= keras.src.utils.to_categorical(train_target)
+        else:
+            train_target=train_target
+        self.model.compile(loss=self.loss, optimizer=self.optimizer)
+        self.model.fit(train_input, train_target, epochs=num_epochs)
 
     def test_model(self, test_input, test_target):
         """
@@ -229,6 +244,8 @@ class NeuronalNetworkX:
         :param test_target: Es la parte del DataFrame que nos sirve de salida para testear.
         :return: los resultados de la evaluación de la red neuronal.
         """
+        if self.problem_type == 'CLASSIFICATION':
+            test_target = keras.src.utils.to_categorical(test_target)
         results = self.model.evaluate(test_input, test_target)
         return results
 
@@ -246,3 +263,11 @@ class NeuronalNetworkX:
         self.inputNeurons = list()  # Reiniciar la lista de neuronas de entrada
         self.outputNeurons = list()  # Reiniciar la lista de neuronas de salida
         self.nodeID = 0 # Reiniciar nodeID si quieres que los IDs empiecen desde 0 cada vez
+
+    def set_optimizer(self, optimizer, learning_rate):
+        if optimizer == 'sgd':
+            self.optimizer = SGD(learning_rate =learning_rate)
+        elif optimizer == 'adam':
+            self.optimizer = Adam(learning_rate =learning_rate)
+        elif optimizer == 'rmsprop':
+            self.optimizer = RMSprop(learning_rate =learning_rate)
