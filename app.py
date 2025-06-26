@@ -1,6 +1,7 @@
 import os
 import shutil
 import pandas as pd
+import numpy as np
 from werkzeug.utils import secure_filename
 
 from flask import Flask, render_template, url_for, request, jsonify, redirect, flash
@@ -291,7 +292,6 @@ def set_input_columns():
 
     data = request.json
     input_columns = data.get('input_columns', [])
-    print(len(input_columns))
 
     if not input_columns:
         return jsonify({
@@ -305,9 +305,11 @@ def set_input_columns():
 
         # Get the number of inputs and outputs for network initialization
         num_inputs = len(input_columns)
-        print(num_inputs)
-        num_outputs = len(current_dataset.df_outputs.columns)
-        print(num_outputs)
+        if current_dataset.problem_type() == 'CLASSIFICATION':
+            num_outputs = int(current_dataset.df_outputs.nunique()[0])
+        else: #Si no es clasificación solo tendremos un output ya que no hay que predecir clases
+            num_outputs = len(current_dataset.df_outputs.columns)
+
 
         nx_graph = NeuronalNetworkX(num_inputs, num_outputs)
         #nx_graph.defaultNetwork(0, 0)
@@ -426,6 +428,7 @@ def process_data_preprocessing():
     data = request.json
 
     try:
+        nx_graph.set_problem_type(current_dataset.problem_type())
         # Update train_size from train_test_split
         if 'train_test_split' in data:
             current_dataset.set_train_test_size((float(data['train_test_split']) / 100.0))
@@ -673,8 +676,11 @@ def train_network():
 
     data = request.json
     num_epochs = int(data.get('epochs', 100))
+    optimizer = data.get('optimizer', 'adam')
+    learning_rate = float(data.get('learning_rate', 0.001))
 
     try:
+        nx_graph.set_optimizer(optimizer, learning_rate)
         # First check if network is fully connected
         is_fully_connected_td = nx_graph.isFullyConnectedTopDown()
         is_fully_connected_bu = nx_graph.isFullyConnectedBottomUp()
@@ -687,6 +693,7 @@ def train_network():
 
         # Set the loss function based on problem type
         problem_type = current_dataset.problem_type()
+        nx_graph.set_problem_type(problem_type)
         nx_graph.set_loss(problem_type)
 
         # Parse the network to Keras
@@ -694,7 +701,6 @@ def train_network():
 
         # Divide the dataset
         df_train_input, df_test_input, df_train_output, df_test_output = current_dataset.divide_data()
-
         # Train the model
         nx_graph.train_model(df_train_input, df_train_output, num_epochs)
 
@@ -762,7 +768,7 @@ def get_training_info():
         }), 500
 
 
-# Add these new routes to your app.py file
+
 
 @app.route('/results')
 def results():
@@ -792,6 +798,7 @@ def get_results_data():
 
         # Calculate metrics
         predictions = nx_graph.predict(df_test_input)
+
 
         metrics = {}
         if problem_type == 'REGRESSION':
@@ -865,10 +872,15 @@ def make_predictions():
 
         # Make predictions
         predictions = nx_graph.predict(input_data)
-
+        problem_type = current_dataset.problem_type()
+        if problem_type == 'CLASSIFICATION':
+            best_prediction= str(np.argmax(predictions))
+        else:
+            best_prediction = str(predictions[0][0])
+        print(predictions)
         return jsonify({
             'status': 'success',
-            'predictions': predictions.tolist()
+            'predictions': best_prediction
         })
 
     except Exception as e:

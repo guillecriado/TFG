@@ -608,7 +608,7 @@
                     const resultValue = document.getElementById('result-value');
 
                     // Show the first output value
-                    resultValue.textContent = data.predictions[0][0].toFixed(4);
+                    resultValue.textContent = data.predictions;
                     resultDiv.classList.add('show');
                 } else {
                     alert('Error making prediction: ' + data.message);
