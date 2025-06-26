@@ -872,7 +872,11 @@ def make_predictions():
 
         # Make predictions
         predictions = nx_graph.predict(input_data)
-        best_prediction= str(np.argmax(predictions))
+        problem_type = current_dataset.problem_type()
+        if problem_type == 'CLASSIFICATION':
+            best_prediction= str(np.argmax(predictions))
+        else:
+            best_prediction = str(predictions[0][0])
         print(predictions)
         return jsonify({
             'status': 'success',

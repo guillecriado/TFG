@@ -213,7 +213,7 @@ class NeuronalNetworkX:
             if self.problem_type == 'CLASSIFICATION':
                 self.model.add(Dense(size_actual_later,activation='softmax'))
             else:
-                self.model.add(Dense(size_actual_later,activation='sigmoid'))
+                self.model.add(Dense(size_actual_later,activation='linear'))
 
     def save_model(self):
         """
