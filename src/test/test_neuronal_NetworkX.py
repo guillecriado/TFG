@@ -14,23 +14,23 @@ if __name__ == '__main__':
 
 class FullyConnectedNetworkXTest(unittest.TestCase):
     def test_TopDownTrue(self):
-        nnx= NeuronalNetworkX(1,1)
-        nnx.defaultNetwork()
-        self.assertEqual(nnx.isFullyConnectedTopDown(), True)
+        nxx = NeuronalNetworkX(1,1)
+        nxx.defaultNetwork(1,2)
+        self.assertEqual(nxx.isFullyConnectedTopDown(), True)
 
     def test_TopDownFalse(self):
         nnx= NeuronalNetworkX(1,1)
-        nnx.defaultNetwork()
+        nnx.defaultNetwork(1,2)
         nnx.remove_edge(2,1)
         self.assertEqual(nnx.isFullyConnectedTopDown(), False)
 
     def test_BottonUpTrue(self):
         nnx= NeuronalNetworkX(1,1)
-        nnx.defaultNetwork()
+        nnx.defaultNetwork(1,2)
         self.assertEqual(nnx.isFullyConnectedBottomUp(), True)
 
     def test_BottonUpFalse(self):
         nnx= NeuronalNetworkX(1,1)
-        nnx.defaultNetwork()
+        nnx.defaultNetwork(1,2)
         nnx.remove_edge(0,2)
         self.assertEqual(nnx.isFullyConnectedBottomUp(), False)
