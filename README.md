@@ -1,4 +1,4 @@
-# TFG - Neural Network Visual Designer
+# Genexnet - Neural Network Visual Designer
 
 [![Python application](https://github.com/guillecriado/TFG/actions/workflows/python-app.yml/badge.svg)](https://github.com/guillecriado/TFG/actions/workflows/python-app.yml)
 [![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -9,7 +9,7 @@
 
 ## 📋 Descripción
 
-TFG Neural Network Visual Designer es una herramienta educativa y práctica que permite a usuarios de todos los niveles diseñar arquitecturas de redes neuronales mediante una interfaz gráfica interactiva. El proyecto combina la potencia de Keras/TensorFlow con una visualización intuitiva basada en NetworkX y PyVis, permitiendo a los usuarios comprender mejor cómo funcionan las redes neuronales a nivel arquitectónico.
+Genexnet Neural Network Visual Designer es una herramienta educativa y práctica que permite a usuarios de todos los niveles diseñar arquitecturas de redes neuronales mediante una interfaz gráfica interactiva. El proyecto combina la potencia de Keras/TensorFlow con una visualización intuitiva basada en NetworkX y PyVis, permitiendo a los usuarios comprender mejor cómo funcionan las redes neuronales a nivel arquitectónico.
 
 ### Características Principales
 
@@ -478,4 +478,5 @@ Para preguntas, sugerencias o reportar bugs:
 ⭐ Si este proyecto te resulta útil para aprender sobre redes neuronales, considera darle una estrella en GitHub!
 
 **Estado del Proyecto:** 🚧 En desarrollo activo  
-**Última Actualización:** Diciembre 2024
+**Última Actualización:** Diciembre 2025
+
